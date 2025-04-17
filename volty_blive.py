@@ -24,9 +24,15 @@ logging.basicConfig(
     ]
 )
 
-# Alpaca API credentials
-api_key = 'PKYXKXZCBA155CHGFHJ2'
-secret_key = "fZoyUsSQ6SdN7w4pipiGJidwmd9MT4EPUcjXjPk9"
+from dotnev import load_dotenv
+
+# Apply nest_asyncio to allow running the event loop
+load_dotenv()
+
+# Get API keys from environment variables
+api_key = os.environ.get('ALPACA_API_KEY')
+secret_key = os.environ.get('ALPACA_SECRET_KEY')
+
 paper = True  # Set to True for paper trading
 
 # Initialize clients

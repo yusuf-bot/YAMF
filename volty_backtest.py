@@ -6,11 +6,15 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
+from dotnev import load_dotenv
 import os
+# Apply nest_asyncio to allow running the event loop
+load_dotenv()
 
-# Initialize clients
-api_key = 'PKYXKXZCBA155CHGFHJ2'
-secret_key = "fZoyUsSQ6SdN7w4pipiGJidwmd9MT4EPUcjXjPk9"
+# Get API keys from environment variables
+api_key = os.environ.get('ALPACA_API_KEY')
+secret_key = os.environ.get('ALPACA_SECRET_KEY')
+
 data_client = CryptoHistoricalDataClient(api_key, secret_key)
 
 # Strategy parameters
