@@ -15,12 +15,16 @@ from alpaca.trading.client import TradingClient
 from alpaca.trading.stream import TradingStream
 from alpaca.trading.requests import GetOptionContractsRequest, MarketOrderRequest
 from alpaca.trading.enums import AssetStatus, ContractType, AssetClass
-
+from dotenv import load_dotenv
+import os
 # Apply nest_asyncio to allow running the event loop
+load_dotenv()
+
+# Get API keys from environment variables
+api_key = os.environ.get('ALPACA_API_KEY')
+secret_key = os.environ.get('ALPACA_SECRET_KEY')
 
 nest_asyncio.apply()
-api_key='PKAYLHQM6FJR2NSF1MIZ'
-secret_key = "4MvxiK4K4z5evl7Q3eHadO87qB9WcFAPZXaAYJV9"
 paper = True
 # Initialize Alpaca clients
 

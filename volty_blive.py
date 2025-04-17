@@ -24,7 +24,7 @@ logging.basicConfig(
     ]
 )
 
-from dotnev import load_dotenv
+from dotenv import load_dotenv
 
 # Apply nest_asyncio to allow running the event loop
 load_dotenv()

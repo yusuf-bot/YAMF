@@ -6,7 +6,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
-from dotnev import load_dotenv
+from dotenv import load_dotenv
 import os
 # Apply nest_asyncio to allow running the event loop
 load_dotenv()

@@ -16,7 +16,7 @@ from alpaca.trading.client import TradingClient
 from alpaca.trading.stream import TradingStream
 from alpaca.trading.requests import GetOptionContractsRequest, MarketOrderRequest, GetCalendarRequest
 from alpaca.trading.enums import AssetStatus, ContractType, AssetClass
-from dotnev import load_dotenv
+from dotenv import load_dotenv
 import os
 # Apply nest_asyncio to allow running the event loop
 load_dotenv()

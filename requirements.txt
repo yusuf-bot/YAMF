@@ -1,0 +1,8 @@
+pandas
+numpy
+matplotlib
+alpaca-py
+python-dotenv
+scipy
+pytz
+nest-asyncio
