@@ -1,5 +1,5 @@
-from alpaca.data import CryptoHistoricalDataClient
-from alpaca.data.requests import CryptoBarsRequest
+from alpaca.data import StockHistoricalDataClient
+from alpaca.data.requests import StockBarsRequest
 from alpaca.data.timeframe import TimeFrame
 from datetime import datetime, timedelta
 import pandas as pd
@@ -15,19 +15,19 @@ load_dotenv()
 api_key = os.environ.get('ALPACA_API_KEY')
 secret_key = os.environ.get('ALPACA_SECRET_KEY')
 
-data_client = CryptoHistoricalDataClient(api_key, secret_key)
+data_client = StockHistoricalDataClient(api_key, secret_key)
 
 # Strategy parameters
 length = 1  # SMA length for TR
 num_atrs = 1  # ATR multiplier
-initial_capital = 10000
-symbol = "BTC/USD"  # Crypto symbol format
+initial_capital = 100
+symbol = "AMD"  # Stock symbol format
 
 # Get historical data
 end = datetime(2025, 4, 15)
-start = end - timedelta(days=1000)  # 1 year of data
+start = end - timedelta(days=31)  # 1 year of data
 
-request_params = CryptoBarsRequest(
+request_params = StockBarsRequest(
     symbol_or_symbols=symbol,
     timeframe=TimeFrame.Minute,
     start=start,
@@ -35,7 +35,7 @@ request_params = CryptoBarsRequest(
 )
 
 # Get data
-bars = data_client.get_crypto_bars(request_params)
+bars = data_client.get_stock_bars(request_params)
 df = bars.df.reset_index()
 
 # Calculate True Range and ATR
@@ -50,17 +50,23 @@ df['atrs'] = df['atr_sma'] * num_atrs
 df['long_entry_price'] = df['close'].shift(1) + df['atrs'].shift(1)
 df['short_entry_price'] = df['close'].shift(1) - df['atrs'].shift(1)
 
-
 # Initialize columns for backtesting
 df['position'] = 0
+df['shares'] = 0
 df['long_triggered'] = False
 df['short_triggered'] = False
-df['equity'] = initial_capital
+df['equity'] = float(initial_capital)
+df['trade_type'] = ''
+df['entry_price'] = 0.0
+df['exit_price'] = 0.0
+df['profit_loss'] = 0.0
 
 # Backtest the strategy
 position = 0
-equity = initial_capital
+shares = 0
+equity = float(initial_capital)
 entry_price = 0
+trade_entry_time = None
 
 for i in range(length + 1, len(df)):
     current_price = df['close'].iloc[i]
@@ -75,38 +81,60 @@ for i in range(length + 1, len(df)):
         if position <= 0 and current_price >= long_entry:
             # Close any existing short position
             if position < 0:
-                profit = (entry_price - prev_price) * abs(position)
+                profit = (entry_price - prev_price) * abs(shares)
                 equity += profit
+                # Record exit for short position
+                df.loc[df.index[i], 'exit_price'] = prev_price
+                df.loc[df.index[i], 'profit_loss'] = profit
             
             # Enter long position
+            shares = 1
             position = 1
             entry_price = long_entry
+            trade_entry_time = df['timestamp'].iloc[i]
             df.loc[df.index[i], 'long_triggered'] = True
+            df.loc[df.index[i], 'trade_type'] = 'LONG'
+            df.loc[df.index[i], 'entry_price'] = entry_price
         
         # Check for short entry
         elif position >= 0 and current_price <= short_entry:
             # Close any existing long position
             if position > 0:
-                profit = (prev_price - entry_price) * position
+                profit = (prev_price - entry_price) * shares
                 equity += profit
+                # Record exit for long position
+                df.loc[df.index[i], 'exit_price'] = prev_price
+                df.loc[df.index[i], 'profit_loss'] = profit
             
             # Enter short position
+            shares = 1  # Fixed: use short_entry instead of long_entry
             position = -1
             entry_price = short_entry
+            trade_entry_time = df['timestamp'].iloc[i]
             df.loc[df.index[i], 'short_triggered'] = True
+            df.loc[df.index[i], 'trade_type'] = 'SHORT'
+            df.loc[df.index[i], 'entry_price'] = entry_price
     
     # Update position and equity
     df.loc[df.index[i], 'position'] = position
+    df.loc[df.index[i], 'shares'] = shares
     
     # Calculate equity (mark-to-market)
     if position > 0:
-        unrealized_profit = (current_price - entry_price) * position
+        unrealized_profit = (current_price - entry_price) * shares
     elif position < 0:
-        unrealized_profit = (entry_price - current_price) * abs(position)
+        unrealized_profit = (entry_price - current_price) * shares
     else:
         unrealized_profit = 0
     
-    df.loc[df.index[i], 'equity'] = equity + unrealized_profit
+    df.loc[df.index[i], 'equity'] = float(equity + unrealized_profit)
+
+# Create a trades dataframe
+trades_df = df[(df['long_triggered'] == True) | (df['short_triggered'] == True) | 
+               ((df['exit_price'] != 0) & ~pd.isna(df['exit_price']))].copy()
+
+trades_df = trades_df[['timestamp', 'trade_type', 'entry_price', 'exit_price', 
+                       'shares', 'profit_loss']].copy()
 
 # Calculate strategy metrics
 total_trades = df['long_triggered'].sum() + df['short_triggered'].sum()
@@ -122,7 +150,7 @@ plt.style.use('dark_background')
 fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(15, 10), gridspec_kw={'height_ratios': [3, 1]})
 
 # Price and entry levels
-ax1.plot(df['timestamp'], df['close'], label='BTC/USD', color='white', alpha=0.8)
+ax1.plot(df['timestamp'], df['close'], label=f'{symbol}', color='white', alpha=0.8)
 ax1.plot(df['timestamp'], df['long_entry_price'], label='Long Entry', color='green', alpha=0.5, linestyle='--')
 ax1.plot(df['timestamp'], df['short_entry_price'], label='Short Entry', color='red', alpha=0.5, linestyle='--')
 
@@ -132,7 +160,7 @@ short_entries = df[df['short_triggered']]
 ax1.scatter(long_entries['timestamp'], long_entries['long_entry_price'], marker='^', color='green', s=100, label='Long Entry')
 ax1.scatter(short_entries['timestamp'], short_entries['short_entry_price'], marker='v', color='red', s=100, label='Short Entry')
 
-ax1.set_title(f'BTC/USD with Volatility Expansion Close Strategy (Length: {length}, ATR Mult: {num_atrs})', fontsize=14)
+ax1.set_title(f'{symbol} with Volatility Expansion Close Strategy (Length: {length}, ATR Mult: {num_atrs})', fontsize=14)
 ax1.set_ylabel('Price ($)', fontsize=12)
 ax1.legend()
 ax1.grid(alpha=0.3)
@@ -168,12 +196,16 @@ ax2.text(0.02, 0.95, metrics_text, transform=ax2.transAxes, fontsize=10,
 results_dir = os.path.join('c:\\Users\\ASAA\\Desktop\\projects\\vibe', 'backtest_results')
 os.makedirs(results_dir, exist_ok=True)
 
-# Save results
+# Save results as JPG
 plt.tight_layout()
-plt.savefig(os.path.join(results_dir, f'volty_expan_btc_results.png'))
+plt.savefig(os.path.join(results_dir, f'volty_expan_{symbol}_results.jpg'), format='jpg', dpi=300)
+
+# Save trades to CSV
+trades_csv_path = os.path.join(results_dir, f'volty_expan_{symbol}_trades.csv')
+trades_df.to_csv(trades_csv_path, index=False)
 
 # Save detailed results to CSV
-df.to_csv(os.path.join(results_dir, f'volty_expan_btc_data.csv'))
+df.to_csv(os.path.join(results_dir, f'volty_expan_{symbol}_data.csv'))
 
 # Save summary results
 summary = {
@@ -192,7 +224,7 @@ summary = {
 }
 
 summary_df = pd.DataFrame([summary])
-summary_df.to_csv(os.path.join(results_dir, f'volty_expan_btc_summary.csv'), index=False)
+summary_df.to_csv(os.path.join(results_dir, f'volty_expan_{symbol}_summary.csv'), index=False)
 
 # Print summary
 print("\nVolatility Expansion Close Strategy Results:")
@@ -207,3 +239,4 @@ print(f"Short Trades: {short_trades}")
 print(f"Max Drawdown: {max_drawdown:.2f}%")
 
 print(f"\nResults saved to {results_dir}")
+print(f"Trades CSV saved to: {trades_csv_path}")

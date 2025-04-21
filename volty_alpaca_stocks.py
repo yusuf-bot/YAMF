@@ -10,12 +10,12 @@ from collections import deque
 
 # Alpaca imports
 from alpaca.trading.client import TradingClient
-from alpaca.trading.requests import MarketOrderRequest
+from alpaca.trading.requests import StopOrderRequest, MarketOrderRequest
 from alpaca.trading.enums import OrderSide, TimeInForce, OrderStatus
-from alpaca.data.historical import CryptoHistoricalDataClient
-from alpaca.data.requests import CryptoBarsRequest
+from alpaca.data.historical import StockHistoricalDataClient
+from alpaca.data.requests import StockBarsRequest
 from alpaca.data.timeframe import TimeFrame
-from alpaca.data.live import CryptoDataStream
+from alpaca.data.live import StockDataStream
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -30,7 +30,7 @@ SECRET_KEY = os.environ.get('ALPACA_SECRET_KEY')
 PAPER = True  # Set to False for live trading
 
 # Strategy parameters
-SYMBOL = "DOGE/USD"  # Alpaca crypto format
+SYMBOL = "AMD"  # Alpaca Stock format
 TIMEFRAME = TimeFrame.Minute  # 1-minute bars
 LENGTH = 5  # Length for ATR calculation
 ATR_MULT = 0.75  # ATR multiplier
@@ -39,7 +39,7 @@ BASE_CASH = 10000.0  # Base position size in USD
 class VoltyExpanCloseStrategy:
     def __init__(self):
         self.trading_client = TradingClient(API_KEY, SECRET_KEY, paper=PAPER)
-        self.stream = CryptoDataStream(API_KEY, SECRET_KEY)
+        self.stream = StockDataStream(API_KEY, SECRET_KEY)
         
         self.initial_equity = None
         self.current_position = 0
@@ -50,11 +50,7 @@ class VoltyExpanCloseStrategy:
         # Store candles in a deque for easy management
         self.candles = deque(maxlen=100)  # Store up to 100 candles
         self.ready_to_trade = False
-        
-        # Track virtual stop orders
-        self.virtual_stops = {}  # Format: {id: {'side': side, 'qty': qty, 'stop_price': price, 'order_id': None}}
-        self.active_positions = {}  # Format: {id: {'side': side, 'qty': qty, 'entry_price': price, 'stop_price': price}}
-        self.next_id = 1  # Simple ID counter for our virtual stops
+        self.active_orders = {}  # Track active stop orders
         
         # Initialize equity
         self.get_account_equity()
@@ -120,14 +116,16 @@ class VoltyExpanCloseStrategy:
         available_cash = float(account.buying_power) * 0.95  # Use 95% of available buying power
         
         position_cash = min(BASE_CASH * equity_growth, available_cash)
-        position_qty = position_cash / price
         
-        # Round down to 6 decimal places for BTC
-        position_qty = np.floor(position_qty * 1e6) / 1e6
+        # For stocks, we need whole shares
+        position_qty = int(position_cash / price)
+        
+        # Ensure at least 1 share
+        position_qty = max(position_qty, 1)
         
         logger.info(f"Current equity: ${current_equity}, Growth multiplier: {equity_growth:.2f}")
         logger.info(f"Available cash: ${available_cash:.2f}")
-        logger.info(f"Position cash: ${position_cash:.2f}, Position quantity: {position_qty:.6f}")
+        logger.info(f"Position cash: ${position_cash:.2f}, Position quantity: {position_qty} shares")
         
         return position_qty
 
@@ -136,7 +134,7 @@ class VoltyExpanCloseStrategy:
         try:
             positions = self.trading_client.get_all_positions()
             for position in positions:
-                if position.symbol == SYMBOL.replace("/", ""):  # Alpaca removes the slash in position symbols
+                if position.symbol == SYMBOL:  # No need to replace "/" for stock symbols
                     qty = float(position.qty)
                     side = 'long' if qty > 0 else 'short'
                     return qty, side
@@ -145,125 +143,65 @@ class VoltyExpanCloseStrategy:
             logger.error(f"Error getting positions: {e}")
             return 0, None
 
-    def place_market_order(self, side, qty):
-        """Place a market order through Alpaca"""
+    def cancel_existing_orders(self):
+        """Cancel all existing orders for the symbol"""
         try:
+            orders = self.trading_client.get_orders()
+            for order in orders:
+                if order.symbol == SYMBOL:  # No need to replace "/" for stock symbols
+                    self.trading_client.cancel_order_by_id(order.id)
+                    logger.info(f"Cancelled order: {order.id}")
+                    
+                    # Remove from tracking
+                    if order.id in self.active_orders:
+                        del self.active_orders[order.id]
+        except Exception as e:
+            logger.error(f"Error cancelling orders: {e}")
+
+    def place_stop_order(self, side, qty, stop_price):
+        """Place a stop order through Alpaca"""
+        try:
+            # First cancel any existing orders
+            self.cancel_existing_orders()
+            
             if qty <= 0:
                 logger.error(f"Invalid quantity: {qty}")
                 return None
                 
-            logger.info(f"Placing {side} market order for {qty} {SYMBOL}")
+            logger.info(f"Placing {side} stop order for {qty} shares of {SYMBOL} at ${stop_price:.2f}")
             
-            order_data = MarketOrderRequest(
-                symbol=SYMBOL.replace("/", ""),
+            order_data = StopOrderRequest(
+                symbol=SYMBOL,  # No need to replace "/" for stock symbols
                 qty=qty,
                 side=OrderSide.BUY if side.lower() == "buy" else OrderSide.SELL,
-                time_in_force=TimeInForce.GTC
+                time_in_force=TimeInForce.GTC,
+                stop_price=stop_price
             )
             
             order = self.trading_client.submit_order(order_data=order_data)
-            logger.info(f"Market order placed: {order.id}")
+            logger.info(f"Stop order placed: {order.id}")
+            
+            # Track the order
+            self.active_orders[order.id] = {
+                "side": side,
+                "qty": qty,
+                "stop_price": stop_price
+            }
             
             return order
-        
         except Exception as e:
-            logger.error(f"Error placing market order: {e}")
+            logger.error(f"Error placing stop order: {e}")
             return None
 
-    def create_virtual_stop(self, side, qty, stop_price):
-        """Create a virtual stop order"""
-        stop_id = self.next_id
-        self.next_id += 1
-        
-        self.virtual_stops[stop_id] = {
-            'side': side,
-            'qty': qty,
-            'stop_price': stop_price,
-            'order_id': None  # Will be filled when we place the actual order
-        }
-        
-        logger.info(f"Created virtual {side} stop #{stop_id} for {qty} {SYMBOL} at ${stop_price:.2f}")
-        return stop_id
-
-    def cancel_virtual_stops(self):
-        """Cancel all virtual stop orders"""
-        self.virtual_stops = {}
-        logger.info("Cancelled all virtual stop orders")
 
     def close_position(self):
         """Close any existing position for the symbol"""
         try:
-            symbol = SYMBOL.replace("/", "")
-            logger.info(f"Closing position for {symbol}")
-            self.trading_client.close_position(symbol_or_asset_id=symbol)
+            logger.info(f"Closing position for {SYMBOL}")
+            self.trading_client.close_position(symbol_or_asset_id=SYMBOL)  # No need to replace "/" for stock symbols
             logger.info("Position closed successfully")
         except Exception as e:
             logger.error(f"Error closing position: {e}")
-
-    def check_virtual_stops(self):
-        """Check if any virtual stops should be triggered based on current price"""
-        if self.latest_price is None:
-            return
-            
-        # Check each virtual stop
-        for stop_id in list(self.virtual_stops.keys()):
-            stop = self.virtual_stops[stop_id]
-            
-            # Check if stop price is hit
-            if (stop['side'].lower() == 'buy' and self.latest_price >= stop['stop_price']) or \
-               (stop['side'].lower() == 'sell' and self.latest_price <= stop['stop_price']):
-                
-                logger.info(f"Virtual stop #{stop_id} triggered at ${self.latest_price:.2f}")
-                
-                # Place market order
-                order = self.place_market_order(stop['side'], stop['qty'])
-                
-                if order:
-                    # Record the position
-                    position_id = stop_id  # Use same ID for simplicity
-                    self.active_positions[position_id] = {
-                        'side': stop['side'],
-                        'qty': stop['qty'],
-                        'entry_price': self.latest_price,
-                        'stop_id': stop_id
-                    }
-                    
-                    # Remove the virtual stop
-                    del self.virtual_stops[stop_id]
-                    
-                    # Cancel other virtual stops since we now have a position
-                    self.cancel_virtual_stops()
-
-    def check_for_exit(self):
-        """Check if we should exit any positions based on ATR"""
-        if not self.active_positions or self.latest_price is None:
-            return
-            
-        # Calculate indicators to get updated exit levels
-        df = self.calculate_indicators()
-        if df is None:
-            return
-            
-        # Get the latest complete bar
-        latest_bar = df.iloc[-2]
-        
-        # Check each position for exit
-        for position_id in list(self.active_positions.keys()):
-            position = self.active_positions[position_id]
-            
-            # Determine exit price based on position side
-            if position['side'].lower() == 'buy':  # Long position
-                exit_price = latest_bar['short_entry_price']  # Exit long at short entry
-                if self.latest_price <= exit_price:
-                    logger.info(f"Exit signal for long position #{position_id} at ${self.latest_price:.2f}")
-                    self.close_position()
-                    del self.active_positions[position_id]
-            else:  # Short position
-                exit_price = latest_bar['long_entry_price']  # Exit short at long entry
-                if self.latest_price >= exit_price:
-                    logger.info(f"Exit signal for short position #{position_id} at ${self.latest_price:.2f}")
-                    self.close_position()
-                    del self.active_positions[position_id]
 
     def check_for_signals(self):
         """Check the latest data for entry signals"""
@@ -293,8 +231,8 @@ class VoltyExpanCloseStrategy:
             
         logger.info(f"Current price: ${current_price}, Position: {position_qty} ({position_side})")
         
-        # If we have no position and no virtual stops, set up virtual stops
-        if position_qty == 0 and not self.virtual_stops and not self.active_positions:
+        # If we have no position, set up stop orders
+        if position_qty == 0:
             long_entry_price = latest_bar['long_entry_price']
             short_entry_price = latest_bar['short_entry_price']
             
@@ -303,11 +241,39 @@ class VoltyExpanCloseStrategy:
             # Calculate position size based on current price
             position_qty = self.get_position_size(current_price)
             
-            # Create virtual stop orders for both long and short entries
-            self.create_virtual_stop("buy", position_qty, long_entry_price)
-            self.create_virtual_stop("sell", position_qty, short_entry_price)
+            # Place stop orders for both long and short entries
+            self.place_stop_order("buy", position_qty, long_entry_price)
+            self.place_stop_order("sell", position_qty, short_entry_price)
             
-            logger.info(f"Virtual stops created - Long: ${long_entry_price}, Short: ${short_entry_price}")
+            logger.info(f"Stop orders placed - Long: ${long_entry_price}, Short: ${short_entry_price}")
+
+    def check_order_status(self):
+        """Check the status of active orders"""
+        if not self.ready_to_trade:
+            return
+            
+        try:
+            orders = self.trading_client.get_orders(status=OrderStatus.OPEN)
+            
+            # Update our tracking
+            current_orders = {}
+            for order in orders:
+                if order.symbol == SYMBOL:  # No need to replace "/" for stock symbols
+                    current_orders[order.id] = order
+            
+            # Check if any orders have been filled
+            for order_id in list(self.active_orders.keys()):
+                if order_id not in current_orders:
+                    logger.info(f"Order {order_id} has been filled or cancelled")
+                    
+                    # Cancel other orders as we now have a position
+                    self.cancel_existing_orders()
+                    
+                    # Remove from tracking
+                    del self.active_orders[order_id]
+                    
+        except Exception as e:
+            logger.error(f"Error checking order status: {e}")
 
     async def handle_bar(self, data):
         """Handle incoming bar data"""
@@ -336,11 +302,8 @@ class VoltyExpanCloseStrategy:
             # Check for signals
             self.check_for_signals()
             
-            # Check virtual stops
-            self.check_virtual_stops()
-            
-            # Check for exit signals
-            self.check_for_exit()
+            # Check order status
+            self.check_order_status()
             
         except Exception as e:
             logger.error(f"Error handling bar data: {e}")
@@ -350,16 +313,6 @@ class VoltyExpanCloseStrategy:
         try:
             if data.symbol == SYMBOL:
                 self.latest_price = data.price
-                
-                # Check virtual stops on each price update
-                self.check_virtual_stops()
-                
-                # Check for exit signals on price updates
-                self.check_for_exit()
-                
-                # Only log occasional price updates to avoid flooding logs
-                if int(time.time()) % 30 == 0:  # Log price every 30 seconds
-                    logger.info(f"Current price: ${self.latest_price:.2f}")
         except Exception as e:
             logger.error(f"Error handling trade data: {e}")
 
@@ -371,15 +324,13 @@ class VoltyExpanCloseStrategy:
         
         while retry_count < max_retries:
             try:
-                # Subscribe to crypto trades
+                # Subscribe to Stock trades
                 self.stream.subscribe_trades(self.handle_trade, SYMBOL)
-                # Subscribe to crypto bars (OHLCV)
+                # Subscribe to Stock bars (OHLCV)
                 self.stream.subscribe_bars(self.handle_bar, SYMBOL)
                 
                 # Start the stream
                 logger.info(f"Starting data stream for {SYMBOL}")
-                logger.info(f"Waiting for market data. Crypto markets are 24/7.")
-                
                 await self.stream._run_forever()
                 
                 # If we get here without an exception, break the loop
@@ -399,7 +350,7 @@ class VoltyExpanCloseStrategy:
                         pass
                         
                     # Create a new stream instance
-                    self.stream = CryptoDataStream(API_KEY, SECRET_KEY)
+                    self.stream = StockDataStream(API_KEY, SECRET_KEY)
                     
                     # Wait before retrying
                     await asyncio.sleep(delay)
@@ -417,7 +368,7 @@ class VoltyExpanCloseStrategy:
 
     def run(self):
         """Run the strategy"""
-        logger.info("Starting Volatility Expansion Close Strategy for Crypto")
+        logger.info("Starting Volatility Expansion Close Strategy for Stock")
         
         # Debug account information
         account = self.trading_client.get_account()
@@ -425,9 +376,8 @@ class VoltyExpanCloseStrategy:
         logger.info(f"Account buying power: ${account.buying_power}")
         
         # Start the streaming data in an async event loop
+        loop = asyncio.get_event_loop()
         try:
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
             loop.run_until_complete(self.start_streaming())
         except ConnectionError as e:
             logger.error(f"Connection error: {e}")

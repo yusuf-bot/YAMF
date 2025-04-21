@@ -18,8 +18,8 @@ import os
 load_dotenv()
 
 # Get API keys from environment variables
-api_key = os.environ.get('ALPACA_API_KEY')
-secret_key = os.environ.get('ALPACA_SECRET_KEY')
+api_key = 'PK2SQ2HPWC2PFGPKE0HV'
+secret_key = 'W4fGM4Yuxf8hroc5XaQohGMPNHyYeNTiIfj61ryt'
 
 nest_asyncio.apply()
 paper = True
@@ -31,7 +31,7 @@ trade_update_stream = TradingStream(api_key=api_key, secret_key=secret_key, pape
 stock_data_client = StockHistoricalDataClient(api_key=api_key, secret_key=secret_key)
 option_data_client = OptionHistoricalDataClient(api_key=api_key, secret_key=secret_key)
 
-underlying_symbol = "JPM"
+underlying_symbol = "SOFI"
 max_abs_notional_delta = 500
 risk_free_rate = 0.045
 positions = {}
@@ -108,7 +108,32 @@ def calculate_implied_volatility(option_price, S, K, T, r, option_type):
             price = K * np.exp(-r * T) * norm.cdf(-d2) - S * norm.cdf(-d1)
         return price - option_price
 
-    return brentq(option_price_diff, 1e-6, 1)
+    try:
+        # Check if option price is within valid range
+        if option_type == 'call':
+            min_price = max(0, S - K * np.exp(-r * T))
+            max_price = S
+        else:  # put
+            min_price = max(0, K * np.exp(-r * T) - S)
+            max_price = K * np.exp(-r * T)
+            
+        if option_price < min_price or option_price > max_price:
+            print(f"Problematic option price for {option_type}: {option_price}")
+            print(f"Valid range: [{min_price:.4f}, {max_price:.4f}] for S={S}, K={K}, T={T:.4f}")
+            return 0.3  # Return default volatility
+            
+        # Try with wider bounds
+        try:
+            return brentq(option_price_diff, 1e-6, 10)  # Increased upper bound
+        except ValueError:
+            # If that fails, try even wider bounds
+            print(f"Trying wider volatility range for option price: {option_price}")
+            return brentq(option_price_diff, 1e-8, 20)
+            
+    except ValueError as e:
+        print(f"Error calculating IV: {e}")
+        print(f"Option price: {option_price}, S={S}, K={K}, T={T:.4f}, type={option_type}")
+        return 0.3  # Default volatility
 
 def calculate_greeks(option_price, strike_price, expiry, underlying_price, risk_free_rate, option_type):
     T = (expiry - pd.Timestamp.now()).days / 365
