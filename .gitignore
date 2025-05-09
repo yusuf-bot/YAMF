@@ -1,1 +1,4 @@
 .env
+/venv_py39
+/venv
+/python39

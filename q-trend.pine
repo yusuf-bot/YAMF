@@ -1,0 +1,39 @@
+//@version=6
+strategy('Q-Trend Strategy FTMO (No Repaint)', overlay = true, initial_capital = 1000000, pyramiding = 1, commission_value = 0.0, process_orders_on_close = true)
+
+// === Inputs ===
+src = input(hlc3, 'Source', group = 'Main settings')
+p = input.int(200, 'Trend period', group = 'Main settings', minval = 1)
+atr_p = input.int(14, 'ATR Period', group = 'Main settings', minval = 1)
+
+// === Variables to avoid repainting ===
+var float prev_m = na
+var float prev_atr = na
+
+// Calculate middle of highest/lowest range from [1] (prev bar)
+h = ta.highest(src[1], p)
+l = ta.lowest(src[1], p)
+m = (h + l) / 2
+atr_val = ta.atr(atr_p)
+
+// Update variables ONLY on confirmed bar close
+prev_m := m
+prev_atr := atr_val
+
+// === Entry conditions using previous bar's confirmed values ===
+epsilon = prev_atr
+longSignal = src[1] > prev_m + epsilon
+shortSignal = src[1] < prev_m - epsilon
+
+
+// === Strategy logic ===
+if longSignal and not (strategy.position_size > 0)
+    trailStopLong = prev_atr
+    strategy.entry('Long', strategy.long)
+    strategy.exit('Exit Long', 'Long', trail_points = trailStopLong, trail_offset = trailStopLong * 0.5)
+
+if shortSignal and not (strategy.position_size < 0)
+    trailStopShort = prev_atr 
+    strategy.entry('Short', strategy.short)
+    strategy.exit('Exit Short', 'Short', trail_points = trailStopShort, trail_offset = trailStopShort * 0.5)
+

@@ -1,0 +1,508 @@
+//@version=5
+strategy(" v1.45 Fibonacci Trend Reversals", overlay=false, process_orders_on_close = true, commission_value = 0.05, initial_capital = 1000)
+
+// =========================================
+// Input Groups
+// =========================================
+string rsi_group = "RSI"
+string main_group = "Fib Sensitivity"
+string atr_sl_finder_group = "ATR SL Finder"
+string trade_execution_group = "Strategy Execution"
+
+// =========================================
+// Fibonacci Retracement Trend Reversal (AKA [IMBA]Algo by @IMBA_TRADER)
+// =========================================
+sensitivity_input = input.float(title = 'Sensitive', step = 0.1, defval = 18, group = main_group)
+//Retain_Fib_Signal = input(title='Retain Fibonacci Signal', tooltip = 'Retains the buy or sell Fiboancci confirmation after a signal is received', defval=false) 
+decayPeriod = input.float(25, 'Decay Period', tooltip = 'Measured in Bars, describes the decaying of Fiboancci confirmation  after a signal is received', minval = 1)
+
+var bool is_long_trend_started = false
+var bool is_short_trend_started = false
+var bool is_trend_change = na
+var bool is_long_trend = false
+var bool is_short_trend = false
+var bool can_long = false
+var bool can_short = false
+var bool Fib_Buy = na
+var bool Fib_Short = na
+var int lastBuyBar = 0
+var int lastSellBar = 0
+
+sensitivity = sensitivity_input
+sensitivity *= 10
+
+high_line = ta.highest(high, int(sensitivity))
+low_line = ta.lowest(low, int(sensitivity))
+channel_range = high_line - low_line
+fib_236 = high_line - channel_range * (0.236)
+fib_5 = high_line - channel_range * 0.5
+fib_786 = high_line - channel_range * (0.786)
+imba_trend_line = fib_5
+
+// =========================================
+// TSOT | Trend Strength Over Time © federalTacos5392b
+// =========================================
+
+// Calculate 75th percentile of price for each length
+percentile_13H = ta.percentile_nearest_rank(high, 13, 75) 
+percentile_21H = ta.percentile_nearest_rank(high, 21, 75) 
+percentile_34H = ta.percentile_nearest_rank(high, 34, 75) 
+percentile_55H = ta.percentile_nearest_rank(high, 55, 75) 
+percentile_89H = ta.percentile_nearest_rank(high, 89, 75)
+
+// Calculate 25th percentile of  price for each length
+percentile_13L =  ta.percentile_nearest_rank(low, 13, 25) 
+percentile_21L =  ta.percentile_nearest_rank(low, 21, 25) 
+percentile_34L =  ta.percentile_nearest_rank(low, 34, 25) 
+percentile_55L = ta.percentile_nearest_rank(low, 55, 25) 
+percentile_89L = ta.percentile_nearest_rank(low, 89, 25)
+
+// Calculate 75th and 25th for length 144 (longest length)
+highest_high = ta.percentile_nearest_rank(high, 144, 75) 
+lowest_low = ta.percentile_nearest_rank(low, 144, 25) 
+
+// Calculate trend strength conditions
+trendBull1 = percentile_13H > highest_high
+trendBull2 = percentile_21H > highest_high
+trendBull3 = percentile_34H > highest_high
+trendBull4 = percentile_55H > highest_high
+trendBull5 = percentile_89H > highest_high
+trendBull6 = percentile_13L > highest_high
+trendBull7 = percentile_21L > highest_high
+trendBull8 = percentile_34L > highest_high
+trendBull9 = percentile_55L > highest_high
+trendBull10 = percentile_89L > highest_high
+
+trendBear1 = percentile_13H < lowest_low
+trendBear2 = percentile_21H < lowest_low
+trendBear3 = percentile_34H < lowest_low
+trendBear4 = percentile_55H < lowest_low
+trendBear5 = percentile_89H < lowest_low
+trendBear6 = percentile_13L < lowest_low
+trendBear7 = percentile_21L < lowest_low
+trendBear8 = percentile_34L < lowest_low
+trendBear9 = percentile_55L < lowest_low
+trendBear10 = percentile_89L < lowest_low
+
+countBull =
+     (trendBull1 ? 1 : 0) +
+     (trendBull2 ? 1 : 0) +
+     (trendBull3 ? 1 : 0) +
+     (trendBull4 ? 1 : 0) +
+     (trendBull5 ? 1 : 0) +
+     (trendBull6 ? 1 : 0) +
+     (trendBull7 ? 1 : 0) +
+     (trendBull8 ? 1 : 0) +
+     (trendBull9 ? 1 : 0) +
+     (trendBull10 ? 1 : 0)
+
+countBear =
+     (trendBear1 ? 1 : 0) +
+     (trendBear2 ? 1 : 0) +
+     (trendBear3 ? 1 : 0) +
+     (trendBear4 ? 1 : 0) +
+     (trendBear5 ? 1 : 0) +
+     (trendBear6 ? 1 : 0) +
+     (trendBear7 ? 1 : 0) +
+     (trendBear8 ? 1 : 0) +
+     (trendBear9 ? 1 : 0) +
+     (trendBear10 ? 1 : 0)
+
+// Calculate weak bull count
+weakBullCount = 
+     (percentile_13L < highest_high and percentile_13L > lowest_low ? 1 : 0) +
+     (percentile_21L < highest_high and percentile_21L > lowest_low ? 1 : 0) +
+     (percentile_34L < highest_high and percentile_34L > lowest_low ? 1 : 0) +
+     (percentile_55L < highest_high and percentile_55L > lowest_low ? 1 : 0) +
+     (percentile_89L < highest_high and percentile_89L > lowest_low ? 1 : 0)
+
+// Calculate weak bear count
+weakBearCount = 
+     (percentile_13H > lowest_low and percentile_13H < highest_high ? 1 : 0) +
+     (percentile_21H > lowest_low and percentile_21H < highest_high ? 1 : 0) +
+     (percentile_34H > lowest_low and percentile_34H < highest_high ? 1 : 0) +
+     (percentile_55H > lowest_low and percentile_55H < highest_high ? 1 : 0) +
+     (percentile_89H > lowest_low and percentile_89H < highest_high ? 1 : 0)
+
+// Calculate bull strength and bear strength
+bullStrength = 10 * (countBull + 0.5*weakBullCount - 0.5*weakBearCount - countBear)
+bearStrength = 10 * (countBear + 0.5*weakBearCount - 0.5*weakBullCount - countBull)
+
+// Calculate the current trend
+currentTrendValue = bullStrength - bearStrength
+
+tsot_bullish = currentTrendValue > 0
+tsot_bearish = currentTrendValue < 0
+
+// CAN LONG/SHORT
+can_long := close >= imba_trend_line and close >= fib_236 and not is_long_trend and tsot_bullish
+can_short := close <= imba_trend_line and close <= fib_786 and not is_short_trend and tsot_bearish
+
+if can_long
+    is_long_trend := true
+    is_short_trend := false
+    is_long_trend_started := is_long_trend_started ? false : true
+else if can_short
+    is_short_trend := true
+    is_long_trend := false
+    is_short_trend_started := is_short_trend_started ? false : true
+else
+    is_trend_change := false
+    can_long := false
+    can_short := false
+    is_short_trend_started := false
+    is_long_trend_started := false
+
+
+
+if can_long 
+    Fib_Buy := true
+    Fib_Short := false
+    lastBuyBar := bar_index
+
+else if can_short and not can_long
+    Fib_Buy := false
+    Fib_Short := true
+    lastSellBar := bar_index
+
+// Apply decay
+if (bar_index - lastBuyBar) >= decayPeriod
+    Fib_Buy := false
+
+if (bar_index - lastSellBar) >= decayPeriod
+    Fib_Short := false
+
+
+is_trend_change := is_short_trend_started or is_long_trend_started
+plotshape(is_long_trend and is_long_trend_started ? imba_trend_line : na, title="Long", style=shape.triangleup, location=location.belowbar, color=color.blue, size=size.small)
+plotshape(is_short_trend and is_short_trend_started ? imba_trend_line : na, title="Short", style=shape.triangledown, location=location.abovebar, color=color.red, size=size.small)
+plot(imba_trend_line, color = is_long_trend[1] ? color.blue : color.red, linewidth = 1)
+
+//plotshape(series=is_long_trend, title="Fib_Buy", location=location.belowbar, color=color.green, style=shape.labelup, text="FibBuy")
+//plotshape(series=is_short_trend, title="Fib_Sell", location=location.belowbar, color=color.red, style=shape.labelup, text="FibSell")
+
+//plotshape(series=can_long, title="Fib_Buy", location=location.belowbar, color=color.green, style=shape.labelup, text="FibBuy")
+//plotshape(series=can_short, title="Fib_Sell", location=location.belowbar, color=color.red, style=shape.labelup, text="FibSell")
+
+
+// =========================================
+// ATR SL Finder © Veryfid
+// =========================================
+atrlength = input.int(title='Length', defval=14, minval=1, group = atr_sl_finder_group)
+smoothing = input.string(title='Smoothing', defval='RMA', options=['RMA', 'SMA', 'EMA', 'WMA'], group = atr_sl_finder_group)
+m = input(3.5, 'Multiplier', group = atr_sl_finder_group)
+src1 = high
+src2 = low
+ma_function(source, length) =>
+    if smoothing == 'RMA'
+        ta.rma(source, length)
+    else
+        if smoothing == 'SMA'
+            ta.sma(source, length)
+        else
+            if smoothing == 'EMA'
+                ta.ema(source, length)
+            else
+                ta.wma(source, length)
+
+x = ma_function(ta.tr(true), atrlength) * m + src1 // SHORT SL
+x2 = src2 - ma_function(ta.tr(true), atrlength) * m // LONG SL
+
+p1 = plot(x, title="ATR Short Stop Loss", color=#ffffff18)
+p2 = plot(x2, title="ATR Long Stop Loss", color=#ffffff18)
+
+// =========================================
+// Strategy Execution © nioboi (yours truly)
+// =========================================
+
+// This allows flexibility so we can allow and set what direction we want our strategy to only execute upon.
+tradeDirection = input.string("Both", "Trade Direction", ["Long Only", "Short Only", "Both"], group = trade_execution_group, tooltip = "Select if you want this strategy to run only Long or Only Short positions, or Both")
+
+risk_reward_ratio = input.float(2, "Risk Reward Ratio", group = trade_execution_group)
+partialTp = input.bool(true, "Use Partial Take Profit", tooltip = "Enable this if you want to exit 50% of your position when half point of your Risk Reward is reached.", group = trade_execution_group)
+allowReversePosition = input.bool(true, "Allow Reversing of Position", tooltip = "Enable this if you want to reverse position when new opposite signal occurs", group = trade_execution_group)
+TP1_Quantity = input.float(50, "Partial Take Profit 1 Amount (%)", step = 5 )
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                                                                     // Stiffness Filter//
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+Use_Stiffness_Long = input(title='Use Stiffness For Longs Enteries', defval=false)
+Use_Stiffness_Short = input(title='Use Stiffness For Shorts Enteries', defval=false)
+Use_Stiffness_Reversal = input(title='Use Stiffness For Reversals (Both Directions)', defval=false) 
+
+maLength = input.int(title='Moving Average Length', minval=1, defval=100)
+stiffLength = input.int(title='Stiffness Length', minval=1, defval=60)
+stiffSmooth = input.int(title='Stiffness Smoothing Length', minval=1, defval=3)
+threshold = input.int(title='Threshold', minval=1, defval=90)
+highlightThresholdCrossovers = input(title='Highlight Threshold Crossovers ?', defval=false)
+
+
+bound = ta.sma(close, maLength) - 0.2 * ta.stdev(close, maLength)
+sumAbove = math.sum(close > bound ? 1 : 0, stiffLength)
+stiffness = ta.ema(sumAbove * 100 / stiffLength, stiffSmooth)
+
+var bool Stiffness_Long = na
+var bool Stiffness_Short = na
+
+long_cond = ta.crossover(stiffness, threshold)
+long_close = stiffness > threshold and ta.falling(stiffness, 1)
+short_cond = ta.crossunder(stiffness, threshold) or stiffness < threshold and ta.falling(stiffness, 1)
+short_close = stiffness < threshold and ta.rising(stiffness, 1)
+
+
+transparent = color.new(color.white, 100)
+
+if long_cond
+    Stiffness_Long:= true
+    Stiffness_Short:= false
+else if short_cond
+    Stiffness_Long:= false
+    Stiffness_Short:= true
+
+
+bgColor = highlightThresholdCrossovers ? stiffness > threshold ? #0ebb23 : color.red : transparent
+bgcolor(bgColor, transp=90)
+
+plot(stiffness, title='Stiffness', style=plot.style_line, color=color.new(#f5c75e, 0))
+plot(threshold, title='Threshold', color=color.new(color.red, 0))
+
+// Plot Buy/Sell labels for visual confirmation [DEBUG]
+//plotshape(series=Stiffness_Long, title="Buy", location=location.belowbar, color=color.green, style=shape.labelup, text="Long")
+//plotshape(series=Stiffness_Short, title="Sell", location=location.belowbar, color=color.red, style=shape.labelup, text="Sell")
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                                                                     // 'TFS Volume Oscillator Noise Filtered //
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+Use_Vol_Long = input(title='Use TFS Volume Oscillator For Longs', defval=false)
+Use_Vol_Short = input(title='Use TFS Volume Oscillator For Shorts', defval=false)
+Use_Vol_Reversal = input(title='Use TFS Volume Oscillator For Reversals (Both Directions)', defval=false) 
+
+volLen = input.int(30, minval=1, title='Volume Length', group='Indicator Parameters')
+volMAlen = input.int(14, minval=1, title='Volume MA Length', group='Indicator Parameters')
+volMAtype = input.string(title='Volume MA Type', group='Indicator Parameters', defval='HMA', options=['LRC', 'HMA'])
+
+
+
+
+// Use regular OHLCV data instead of Heikin Ashi
+iff_1 = close < open ? -volume : 0
+nVolAccum = math.sum(close > open ? volume : iff_1, volLen)
+nRes = nVolAccum / volLen
+hma_1 = ta.hma(nRes, volMAlen)
+linreg_1 = ta.linreg(nRes, volMAlen, 0)
+volMA = volMAtype == 'HMA' ? hma_1 : linreg_1
+
+//Oscillator Plot
+hline(0, color=color.red, linestyle=hline.style_dotted)
+
+col_grow_above = input.color(#08FF08, 'Above   Grow', group='Histogram', inline='Above')
+col_fall_above = input.color(#B2DFDB, 'Fall', group='Histogram', inline='Above')
+col_grow_below = input.color(#FFCDD2, 'Below Grow', group='Histogram', inline='Below')
+col_fall_below = input.color(#E10600, 'Fall', group='Histogram', inline='Below')
+hist_col = nRes >= 0 ? nRes[1] < nRes ? col_grow_above : col_fall_above : nRes[1] < nRes ? col_grow_below : col_fall_below
+plot(nRes, title='Histogram', style=plot.style_columns, color=hist_col)
+
+// MA Coloring
+bullColor = color.from_gradient(volMA, 50, 80, color.new(#f1fd6d, 70), color.new(#f1fd6d, 0))
+bearColor = color.from_gradient(volMA, 20, 50, color.new(#485cff, 0), color.new(#485cff, 70))
+volMAcol = volMA > 0 ? bullColor : bearColor
+plot(volMA, 'Signal', color=volMAcol, linewidth=2)
+
+// ---Bar Color---
+show_color_bar = input(title='Color Bars', defval=true)
+barcolor(show_color_bar ? hist_col : na)
+
+// Initialize the state variable
+var string current_state = na
+
+// Define bull and bear conditions based on the color of the line
+bull_condition = volMA > 0  // Line is yellow (bullish)
+bear_condition = volMA <= 0 // Line is purple/dark blue (bearish)
+
+// Update the state based on conditions
+if (current_state == na or current_state == "bear") and bull_condition
+    current_state := "bull"
+else if (current_state == na or current_state == "bull") and bear_condition
+    current_state := "bear"
+
+// Set Vol_Long and Vol_Short based on the current state
+Vol_Long = current_state == "bull"
+Vol_Short = current_state == "bear"
+
+// Plot Buy/Sell labels for visual confirmation [DEBUG]
+//plotshape(series=Vol_Long, title="Vol_Buy", location=location.bottom, color=color.green, style=shape.labelup, text="VolBuy")
+//plotshape(series=Vol_Short, title="Vol_Sell", location=location.bottom, color=color.red, style=shape.labelup, text="VolSell")
+
+//non continous labels
+plotshape(series=Vol_Long and not Vol_Long[1], title="Vol_Buy", location=location.bottom, color=color.green, style=shape.labelup, text="VolBuy")
+plotshape(series=Vol_Short and not Vol_Short[1], title="Vol_Sell", location=location.bottom, color=color.red, style=shape.labelup, text="VolSell")
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                                                                // EMA //
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+Use_EMA_Long = input(false, title=' Use EMA Logic for Long Enteries')
+Use_EMA_Short = input(false, title=' Use EMA Logic for Short Enteries')
+Use_EMA_Reversal = input(false, title=' Use EMA Logic for Reversals')
+
+len3 = input.int(200, minval=1, title='EMA Length')
+src3 = input(close, title='EMA Source')
+offset3 = input.int(0, title='EMA Offset', minval=-500, maxval=500)
+out3 = ta.ema(src3, len3)
+
+// Buy/Sell conditions based on price action
+EMA_Buy = close > out3
+EMA_Sell = close < out3
+
+// Plot EMA line
+plot(out3, title='EMA', color=color.new(color.blue, 0), offset=offset3)
+// Plot Buy/Sell labels for visual confirmation [DEBUG]
+//plotshape(series=EMA_Buy, title="Buy Condition", location=location.belowbar, color=color.green, style=shape.labelup, text="Buy3")
+//plotshape(series=EMA_Sell, title="Sell Condition", location=location.abovebar, color=color.red, style=shape.labeldown, text="Sell3")
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Long Entry Variables
+var bool plotMarkers_long = false
+var bool firstTPHit_long = false
+var float sl_long = na
+var float breakEven_long = na
+var float tp1_long = na
+var float tp2_long = na
+var float entryPrice_long = na
+var bool inLongPosition = false
+
+// Short Entry Variables
+var bool plotMarkers_short = false
+var bool firstTPHit_short = false
+var float sl_short = na
+var float breakEven_short = na
+var float tp1_short = na
+var float tp2_short = na
+var float entryPrice_short = na
+var bool inShortPosition = false
+
+
+
+// Long or Short Conditions
+enterLong = (can_long or Fib_Buy) and (tradeDirection == "Long Only" or tradeDirection == "Both") and ((Stiffness_Long and Use_Stiffness_Long) or not Use_Stiffness_Long) and ((Vol_Long and Use_Vol_Long) or not Use_Vol_Long) and ((EMA_Buy and Use_EMA_Long) or not Use_EMA_Long)
+enterShort = (can_short or Fib_Short) and (tradeDirection == "Short Only" or tradeDirection == "Both") and ((Stiffness_Long and Use_Stiffness_Short) or not Use_Stiffness_Short) and ((Vol_Short and Use_Vol_Short) or not Use_Vol_Short) and ((EMA_Sell and Use_EMA_Short) or not Use_EMA_Short)
+//Note Stiffness has the same logic for longs and shorts, 
+
+
+
+
+// Reversal Logic
+if inLongPosition and can_short and allowReversePosition  and barstate.isconfirmed and ((Stiffness_Long and Use_Stiffness_Reversal) or not Use_Stiffness_Reversal) and ((Vol_Short and Use_Vol_Reversal) or not Use_Vol_Reversal) and ((EMA_Sell and Use_EMA_Reversal) or not Use_EMA_Reversal)       // in a long position and signal to enter short and havent yet hit first tp
+    strategy.close("Long", "Reversing Long to Short")                                   // close Long in preparation to enter short in the next few lines
+    inLongPosition := false
+else if inShortPosition and can_long and allowReversePosition and barstate.isconfirmed and ((Stiffness_Long and Use_Stiffness_Reversal) or not Use_Stiffness_Reversal) and ((Vol_Long and Use_Vol_Reversal) or not Use_Vol_Reversal) and ((EMA_Buy and Use_EMA_Reversal) or not Use_EMA_Reversal)                           // in a short position and signal to enter long and havent yet hit first tp
+    strategy.close("Short", "Reversing Short to Long")                                  // close Short in preparation to enter long in the next few lines 
+    inShortPosition := false
+
+// Long Entries -----------------------------------------------------------------------------------------------------------------------------------------
+if (enterLong and (not inLongPosition and not inShortPosition)) and barstate.isconfirmed
+    entryPrice_long := close                                                            // set entry price for exit calculation
+    sl_long := x2                                                                       // set SL from the ATR
+    risk = entryPrice_long - sl_long                                                    // Calculate the Risk
+    tp1_long := entryPrice_long + ((risk_reward_ratio * risk) / 2)                      // set the first TP by dividing the entire TP to 2 using risk_reward_ratio
+    tp2_long := entryPrice_long + (risk_reward_ratio * risk)                            // set the 2nd TP
+    breakEven_long := entryPrice_long + (entryPrice_long * 0.002)                       // set the break even to be few pips or 0.20% above the entry to compensate for market fees and still result positive
+    strategy.entry("Long", strategy.long)                                               // create the entry
+    if not partialTp                                                                    // partial TP Management enabled?
+        strategy.exit("Exit Long", "Long", limit = tp2_long, stop = sl_long)            // if not enabled then we create exit triggers as usual in one order
+    else
+        strategy.exit("TP 1 Long", "Long", limit = tp1_long, qty_percent = TP1_Quantity)          // else, we set 1 exit order to be the first TP and closing half of our position
+        strategy.exit("TP 2 Long", "Long", limit = tp2_long, qty_percent = 100)          // we also set the 2nd TP to close the other remaining half
+    firstTPHit_long := false                                                            // ensure global variable flag for first TP Hit is set to false
+    inLongPosition := true                                                              // engage flag to notify below code we are in long position
+// -----------------------------------------------------------------------------------------------------------------------------------------------------
+
+// Short Entries ---------------------------------------------------------------------------------------------------------------------------------------
+if  (enterShort and (not inShortPosition and not inLongPosition)) and barstate.isconfirmed
+    entryPrice_short := close                                                           // set entry price for exit calculation
+    sl_short := x                                                                       // set SL from the ATR
+    risk = sl_short - entryPrice_short                                                  // Calculate the Risk
+    tp1_short := entryPrice_short - ((risk_reward_ratio * risk)/2)                      // set the first TP by dividing the entire TP to 2 using risk_reward_ratio
+    tp2_short := entryPrice_short - (risk_reward_ratio * risk)                          // set the 2nd TP
+    breakEven_short := entryPrice_short - (entryPrice_short * 0.002)                    // set the break even to be few pips or 0.20% above the entry to compensate for market fees and still result positive
+    strategy.entry("Short", strategy.short)                                             // create the entry
+    if not partialTp                                                                    // partial TP Management enabled?
+        strategy.exit("Exit Short", "Short", limit = tp2_short, stop = sl_short)        // if not enabled then we create exit triggers as usual in one order
+    else
+        strategy.exit("TP 1 Short", "Short", limit = tp1_short, qty_percent = TP1_Quantity)       // else, we set 1 exit order to be the first TP and closing half of our position
+        strategy.exit("TP 2 Short", "Short", limit = tp2_short, qty_percent = 100)       // we also set the 2nd TP to close the other remaining half
+    firstTPHit_short := false                                                           // ensure global variable flag for first TP Hit is set to false
+    inShortPosition := true                                                             // engage flag to notify below code we are in long position
+// ----------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+// Dynamic TP and exit strategy for Longs -------------------------------------------------------------------------------------------------------------
+if inLongPosition and partialTp and barstate.isconfirmed                                // in long position and partial TP for exit strategy is enabled
+    if high >= tp1_long and not firstTPHit_long                                         // price hit the first TP
+        sl_long := breakEven_long                                                       // adjust stoploss to breakeven
+    else if low <= sl_long and not firstTPHit_long                                      // not yet hit first TP but hit our SL
+        strategy.close("Long", "SL long")                                               // close the entire long position
+        inLongPosition := false                                                         // not in long position anymore
+    else if low <= breakEven_long and firstTPHit_long                                   // already hit first TP and retraced back to breakEven
+        strategy.close("Long", "BE Long")                                               // close the remaining short position
+        inLongPosition := false                                                         // not in long position anymore
+// -----------------------------------------------------------------------------------------------------------------------------------------------------
+
+// Dynamic TP and exit strategy for Shorts -------------------------------------------------------------------------------------------------------------
+if inShortPosition and partialTp and barstate.isconfirmed                               // in short position and partial TP for exit strategy is enabled
+    if low <= tp1_short and not firstTPHit_short                                        // price hit the first TP
+        firstTPHit_short := true                                                        // set the first TP checker flag to true
+        sl_short := breakEven_short                                                     // adjust stoploss to breakeven
+    else if high >= sl_short and not firstTPHit_short                                   // not yet hit first TP but hit our SL
+        strategy.close("Short", "SL Short")                                             // close the entire short position
+        inShortPosition := false                                                        // not in short position anymore
+    else if high >= breakEven_short and firstTPHit_short                                // already hit first TP and retraced back to breakEven
+        strategy.close("Short", "BE Short")                                             // close the remaining short position
+        inShortPosition := false                                                        // not in short position anymore
+// -----------------------------------------------------------------------------------------------------------------------------------------------------
+
+// =========================================
+// Entry Visuals © nioboi (yours truly)
+// =========================================
+
+// Entry Visual Flags
+if strategy.position_size == 0
+    plotMarkers_long := false
+    plotMarkers_short := false
+if strategy.position_size > 0
+    plotMarkers_long := true
+    plotMarkers_short := false
+else if strategy.position_size < 0
+    plotMarkers_long := false
+    plotMarkers_short := true
+
+// SL and TP Lines
+longEntryMarker = plot(plotMarkers_long ? entryPrice_long : na, "Entry Marker L", color = na)
+longSLMarker = plot(plotMarkers_long ? sl_long : na, "SL Marker L", color = #ff000050, linewidth = 1, style = plot.style_linebr)
+longTP1Marker = plot(plotMarkers_long ? tp1_long : na, "TP1 Marker L", color = #00ff0850, linewidth = 1, style = plot.style_linebr)
+longTP2Marker = plot(plotMarkers_long ? tp2_long : na, "TP2 Marker L", color = #1100ff50, linewidth = 1, style = plot.style_linebr)
+
+shortEntryMarker = plot(plotMarkers_short ? entryPrice_short : na, "Entry Marker S", color = na)
+shortSLMarker = plot(plotMarkers_short ? sl_short : na, "SL Marker S", color = #ff000050, linewidth = 1, style = plot.style_linebr)
+shortTP1Marker = plot(plotMarkers_short ? tp1_short : na, "TP1 Marker S", color = #00ff0850, linewidth = 1, style = plot.style_linebr)
+shortTP2Marker = plot(plotMarkers_short ? tp2_short : na, "TP2 Marker S", color = #1100ff50, linewidth = 1, style = plot.style_linebr)
+
+// SL and TP Fills
+fill(plot1 = longEntryMarker, plot2 = longSLMarker, title = "Long SL BG Fill", color = #b2283320)
+fill(plot1 = longEntryMarker, plot2 = longTP2Marker, title = "Long TP BG Fill", color = #08998120)
+fill(plot1 = shortEntryMarker, plot2 = shortSLMarker, title = "Short SL BG Fill", color = #b2283320)
+fill(plot1 = shortEntryMarker, plot2 = shortTP2Marker, title = "Short TP BG Fill", color = #08998120)

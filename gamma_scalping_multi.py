@@ -17,6 +17,13 @@ from dotenv import load_dotenv
 import os
 load_dotenv()
 
+def wait_for_market_open():
+    while datetime.now().hour < 17 and datetime.now().minute < 30 and datetime.now().hour > 0 and datetime.now().minute > 0:
+        print("Waiting for market to close...")
+        time.sleep(60)
+
+
+wait_for_market_open()
 # Get API keys from environment variables
 api_key = os.environ.get('ALPACA_API_KEY')
 secret_key = os.environ.get('ALPACA_SECRET_KEY')
@@ -31,13 +38,15 @@ trade_update_stream = TradingStream(api_key=api_key, secret_key=secret_key, pape
 stock_data_client = StockHistoricalDataClient(api_key=api_key, secret_key=secret_key)
 option_data_client = OptionHistoricalDataClient(api_key=api_key, secret_key=secret_key)
 
-underlying_symbols = ["AAPL", "SPY", "QQQ"] 
+underlying_symbols = ["SOFI"] 
 max_abs_notional_delta = 500
 risk_free_rate = 0.045
 positions = {}
 
-print(f"Liquidating pre-existing positions for all tracked symbols")
+print("Liquidating pre-existing positions for all tracked symbols")
 all_positions = trading_client.get_all_positions()
+
+
 
 for p in all_positions:
     if p.asset_class == AssetClass.US_OPTION:
@@ -226,6 +235,7 @@ async def gamma_scalp(initial_interval=30, interval=120):
     await asyncio.sleep(initial_interval)
     maintain_delta_neutral()
     while True:
+        wait_for_market_open()
         await asyncio.sleep(interval)
         maintain_delta_neutral()
 
