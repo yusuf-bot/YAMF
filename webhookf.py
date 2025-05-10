@@ -13,7 +13,7 @@ import re
 import traceback
 from dotenv import load_dotenv
 import logging
-
+import ccxt
 # Setup logging
 logging.basicConfig(
     level=logging.INFO,
@@ -43,15 +43,19 @@ API_SECRET = os.environ.get("BINANCE_API_SECRET")
 BINANCE_BASE_URL = os.environ.get("BINANCE_BASE_URL", "https://fapi.binance.com")  # Futures API endpoint
 USE_TESTNET = os.environ.get("USE_TESTNET", "True").lower() == "true"
 
-if USE_TESTNET:
-    BINANCE_BASE_URL = "https://testnet.binancefuture.com"  # Futures testnet API endpoint
-    logger.info("Using Binance Futures TESTNET")
-else:
-    logger.info("Using Binance Futures PRODUCTION")
+# Initialize the exchange
+exchange = ccxt.binance({
+    'apiKey': API_KEY,
+    'secret': API_SECRET,
+    'options': {  # Note: 'options' not 'option'
+        'defaultType': 'future',  # Note: 'future' not 'futures'
+    }
+})
 
+exchange.set_sandbox_mode(True)
 # Global storage to track positions
 POSITIONS = {}
-
+intrade=False
 # Store the timestamp when the script starts - use UTC to avoid timezone issues
 START_DATETIME = datetime.now(timezone.utc)
 logger.info(f"Script started at: {START_DATETIME.strftime('%Y-%m-%d %H:%M:%S UTC')}")
@@ -206,113 +210,30 @@ def parse_trade_signal(email_body):
         logger.error(f"Error parsing trade signal: {str(e)}")
         return None
 
-def binance_futures_request(endpoint, method='GET', params=None):
-    """Make a request to Binance Futures API with authentication"""
-    if params is None:
-        params = {}
-    
-    # Add timestamp for signature
-    params['timestamp'] = str(int(time.time() * 1000))
-    
-    # Generate signature
-    query_string = '&'.join([f"{k}={v}" for k, v in params.items()])
-    signature = hmac.new(
-        API_SECRET.encode('utf-8'),
-        query_string.encode('utf-8'),
-        hashlib.sha256
-    ).hexdigest()
-    
-    params['signature'] = signature
-    
-    # Headers
-    headers = {
-        "X-MBX-APIKEY": API_KEY
-    }
-    
-    url = f"{BINANCE_BASE_URL}{endpoint}"
-    
-    try:
-        if method == 'GET':
-            response = requests.get(url, params=params, headers=headers)
-        elif method == 'POST':
-            response = requests.post(url, params=params, headers=headers)
-        elif method == 'DELETE':
-            response = requests.delete(url, params=params, headers=headers)
-        else:
-            raise ValueError(f"Unsupported method: {method}")
-        
-        # Check for error status code
-        response.raise_for_status()
-        
-        return response.json()
-    except requests.exceptions.HTTPError as http_err:
-        error_data = {}
-        try:
-            error_data = response.json()
-        except:
-            pass
-        
-        logger.error(f"HTTP error: {http_err}, Response: {error_data}")
-        return {"error": str(http_err), "binance_error": error_data}
-    except Exception as e:
-        logger.error(f"Error making request to Binance: {str(e)}")
-        return {"error": str(e)}
-
-def set_leverage(symbol, leverage):
-    """Set leverage for a specific symbol"""
-    endpoint = "/fapi/v1/leverage"
-    params = {
-        "symbol": symbol.replace(".P", ""),  # Remove .P suffix for API
-        "leverage": leverage
-    }
-    
-    return binance_futures_request(endpoint, method='POST', params=params)
-
-def get_futures_position_info():
-    """Get current positions information"""
-    endpoint = "/fapi/v2/positionRisk"
-    return binance_futures_request(endpoint)
-
-def execute_futures_order(symbol, side, position_side, quantity):
-    """Execute a futures order on Binance"""
-    symbol = symbol.replace(".P", "")  # Remove .P suffix for API calls
-    
-    # Set order params
-    endpoint = "/fapi/v1/order"
-    params = {
-        "symbol": symbol,
-        "side": side.upper(),  # SELL or BUY
-        "type": "MARKET",
-        "quantity": f"1",  # Format to 3 decimal places
-        "reduceOnly": "false"
-    }
-    
-    # If we're using hedge mode, specify the position side
-    if position_side:
-        params["positionSide"] = position_side.upper()  # LONG or SHORT
-    
-    return binance_futures_request(endpoint, method='POST', params=params)
 
 def get_futures_account_balance():
-    """Get futures account balance"""
-    endpoint = "/fapi/v2/balance"
-    return binance_futures_request(endpoint)
+    """Get futures account balance using CCXT"""
+    try:
+        balance = exchange.fetch_balance()
+        return balance
+    except Exception as e:
+        logger.error(f"Error fetching account balance: {str(e)}")
+        return {"error": str(e)}
 
-def check_position_mode():
-    """Check if hedge mode is enabled (dual position side)"""
-    endpoint = "/fapi/v1/positionSide/dual"
-    result = binance_futures_request(endpoint)
-    
-    return result.get("dualSidePosition", False)
+# Remove the binance_futures_request function as it's no longer needed
 
-def set_position_mode(dual_position=True):
-    """Set position mode (hedge or one-way)"""
-    endpoint = "/fapi/v1/positionSide/dual"
-    params = {
-        "dualSidePosition": "true" if dual_position else "false"
-    }
-    
-    return binance_futures_request(endpoint, method='POST', params=params)
+def get_futures_position_info(symbol=None):
+    """Get current positions information using CCXT"""
+    try:
+        if symbol:
+            positions = exchange.fetch_positions([symbol])
+        else:
+            positions = exchange.fetch_positions()
+        return positions
+    except Exception as e:
+        logger.error(f"Error fetching positions: {str(e)}")
+        return {"error": str(e)}
+
 
 def process_trading_signal(signal):
     """Process the trading signal and execute trade"""
@@ -328,105 +249,82 @@ def process_trading_signal(signal):
         
         # Log the parsed data
         logger.info(f"Signal: {ticker}, {action}, {quantity} contracts at {price}, position: {position}, leverage: {leverage}")
+
+        # Execute the trade using CCXT
+        symbol = "ETH/USDT"
         
-        # Check position mode (hedge or one-way)
-        is_hedge_mode = check_position_mode()
-        logger.info(f"Hedge mode is {'enabled' if is_hedge_mode else 'disabled'}")
+        try:
+            # Set leverage first
+            exchange.set_leverage(leverage, symbol)
+            logger.info(f"Leverage set to {leverage} for {symbol}")
+        except Exception as e:
+            logger.warning(f"Could not set leverage: {str(e)}")
         
-        if not is_hedge_mode:
-            # Try to enable hedge mode, but don't fail if it can't be changed
-            logger.info("Attempting to set position mode to hedge mode (dual position side)")
-            try:
-                set_position_mode(True)
-            except Exception as e:
-                logger.warning(f"Could not change position mode: {str(e)}. Continuing with current mode.")
+        # Create the order
+        try:
+            order_result = exchange.create_market_order(symbol=symbol, side=action, amount=quantity)
+            logger.info(f"Order placed successfully: {order_result}")
+        except Exception as e:
+            logger.error(f"Error placing order: {str(e)}")
+            return {"error": f"Order placement failed: {str(e)}"}
         
-        # Set leverage
-        leverage_result = set_leverage(standard_ticker, leverage)
-        logger.info(f"Leverage set result: {json.dumps(leverage_result)}")
-        
-        if "error" in leverage_result:
-            return {
+        # Get updated position information using CCXT
+        try:
+            positions = exchange.fetch_positions([symbol])
+            balance = exchange.fetch_balance()
+            
+            # Update our position tracking
+            for pos in positions:
+                if pos.get("symbol") == symbol:
+                    position_size = float(pos.get("contracts", 0))
+                    entry_price = float(pos.get("entryPrice", 0))
+                    
+                    if position_size != 0:
+                        # We have an active position
+                        POSITIONS[ticker] = {
+                            "position": "long" if position_size > 0 else "short",
+                            "quantity": abs(position_size),
+                            "entry_price": entry_price,
+                            "leverage": leverage,
+                            "entry_time": datetime.now(timezone.utc).isoformat()
+                        }
+                    elif ticker in POSITIONS:
+                        # Position was closed
+                        del POSITIONS[ticker]
+            
+            # Format the balance data for easier reading
+            formatted_balance = {}
+            if 'total' in balance:
+                for symbol, amount in balance['total'].items():
+                    if amount > 0:
+                        formatted_balance[symbol] = amount
+            
+            result = {
                 "ticker": ticker,
                 "action": action,
                 "quantity": quantity,
                 "price": price,
                 "position": position,
-                "status": "FAILED",
-                "reason": f"Failed to set leverage: {leverage_result.get('error')}"
+                "leverage": leverage,
+                "order_result": order_result,
+                "current_balance": formatted_balance,
+                "active_positions": list(POSITIONS.keys())
             }
-        
-        # Get current positions
-        positions = get_futures_position_info()
-        current_position = None
-        
-        for pos in positions:
-            if pos.get("symbol") == standard_ticker:
-                current_position = pos
-                break
-        
-        # Determine position side based on hedge mode
-        position_side = None
-        if is_hedge_mode:
-            if position == "long":
-                position_side = "LONG"
-            elif position == "short":
-                position_side = "SHORT"
-        
-    
-        # Determine the side (BUY/SELL) based on action and position
-        order_side = action.upper()
-        
-        # Execute the trade
-        order_result = execute_futures_order(standard_ticker, order_side, position_side, quantity)
-        
-        # Get updated account and position information
-        updated_positions = get_futures_position_info()
-        balance = get_futures_account_balance()
-        
-        # Update our position tracking
-        for pos in updated_positions:
-            if pos.get("symbol") == standard_ticker:
-                position_size = float(pos.get("positionAmt", 0))
-                entry_price = float(pos.get("entryPrice", 0))
-                
-                if position_size != 0:
-                    # We have an active position
-                    POSITIONS[ticker] = {
-                        "position": "long" if position_size > 0 else "short",
-                        "quantity": abs(position_size),
-                        "entry_price": entry_price,
-                        "leverage": leverage,
-                        "entry_time": datetime.now(timezone.utc).isoformat()
-                    }
-                elif ticker in POSITIONS:
-                    # Position was closed
-                    del POSITIONS[ticker]
-        
-        # Format the balance data for easier reading
-        formatted_balance = {}
-        for bal in balance:
-            symbol = bal.get("asset")
-            free = float(bal.get("balance", "0"))
-            if free > 0:
-                formatted_balance[symbol] = free
-        
-        result = {
-            "ticker": ticker,
-            "action": action,
-            "quantity": quantity,
-            "price": price,
-            "position": position,
-            "leverage": leverage,
-            "order_result": order_result,
-            "current_balance": formatted_balance,
-            "active_positions": list(POSITIONS.keys())
-        }
-        
-        # Save positions and processed emails after each trade
-        save_positions()
-        
-        return result
+            
+            # Save positions after each trade
+            save_positions()
+            
+            return result
+            
+        except Exception as e:
+            logger.error(f"Error fetching positions or balance: {str(e)}")
+            return {
+                "ticker": ticker,
+                "action": action,
+                "quantity": quantity,
+                "order_result": order_result,
+                "error": f"Could not fetch positions: {str(e)}"
+            }
         
     except Exception as e:
         logger.error(f"Error processing trading signal: {str(e)}")
@@ -491,11 +389,13 @@ def main():
     logger.info(f"Monitoring emails from: {TRADE_SIGNAL_FROM}")
     logger.info(f"Only checking emails received after: {START_DATETIME.strftime('%Y-%m-%d %H:%M:%S')}")
     logger.info(f"Check interval: {CHECK_INTERVAL} seconds")
- 
+    
     while True:
         try:
-         
-            # Connect to email
+            # Log the start of the check cycle
+            check_start_time = datetime.now()
+            logger.info(f"Starting email check cycle at {check_start_time.strftime('%H:%M:%S')}")
+            
             mail = connect_to_email()
             
             if not mail:
@@ -503,15 +403,13 @@ def main():
                 time.sleep(60)
                 continue
             
-  
-            
             # Check for trade signal emails from specific sender received since script start
+            search_start = time.time()
             email_ids = get_emails_since_script_start(mail, TRADE_SIGNAL_FROM)
+            search_time = time.time() - search_start
             
             if not email_ids:
-                logger.info(f"No new emails found from {TRADE_SIGNAL_FROM}")
-            else:
-                logger.info(f"Found {len(email_ids)} new emails to process")
+                logger.info(f"No new emails found from {TRADE_SIGNAL_FROM} (search took {search_time:.2f} seconds)")
             
             # Process emails
             for email_id in email_ids:
@@ -540,7 +438,12 @@ def main():
             
             # Logout from email
             mail.logout()
-          
+            
+            # Calculate and log the time taken for this check cycle
+            check_end_time = datetime.now()
+            check_duration = (check_end_time - check_start_time).total_seconds()
+            logger.info(f"Email check cycle completed in {check_duration:.2f} seconds")
+        
             # Calculate next check time
             next_check_time = datetime.now() + timedelta(seconds=CHECK_INTERVAL)
             logger.info(f"Next check scheduled for {next_check_time.strftime('%H:%M:%S')}")
@@ -551,7 +454,7 @@ def main():
         except Exception as e:
             logger.error(f"Error in main loop: {str(e)}")
             logger.error(traceback.format_exc())
-            time.sleep(60)  # Wait longer on error
+            time.sleep(60)
             
             # Wait longer on error
 if __name__ == "__main__":
