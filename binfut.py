@@ -298,18 +298,21 @@ def background_task():
 
 @app.route('/health', methods=['GET'])
 def health_check():
-    """Health check endpoint for monitoring"""
-    time_since_last_check = (datetime.now(timezone.utc) - LAST_CHECK_TIME).total_seconds()
-    
-    return jsonify({
-        'status': BOT_STATUS,
-        'uptime': (datetime.now(timezone.utc) - START_DATETIME).total_seconds(),
-        'last_check': LAST_CHECK_TIME.isoformat(),
-        'seconds_since_last_check': time_since_last_check,
-        'positions': len(POSITIONS),
-        'processed_emails': len(PROCESSED_EMAIL_IDS)
-    }), 200 if BOT_STATUS == "running" and time_since_last_check < 60 else 500
+    try:
+        time_since_last_check = (datetime.now(timezone.utc) - LAST_CHECK_TIME).total_seconds()
+        return jsonify({
+            'status': BOT_STATUS,
+            'uptime': (datetime.now(timezone.utc) - START_DATETIME).total_seconds(),
+            'last_check': LAST_CHECK_TIME.isoformat(),
+            'seconds_since_last_check': time_since_last_check,
+            'positions': len(POSITIONS),
+            'processed_emails': len(PROCESSED_EMAIL_IDS)
+        }), 200 if BOT_STATUS == "running" and time_since_last_check < 60 else 500
+    except Exception as e:
+        logger.error(f"/health error: {e}")
+        return jsonify({'error': str(e)}), 500
 
+        
 @app.route('/positions', methods=['GET'])
 def get_positions():
     """Get current positions"""
