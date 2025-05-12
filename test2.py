@@ -1,37 +1,25 @@
+import ccxt
 import os
 from dotenv import load_dotenv
-import time
-
-# Load environment variables from .env file
 load_dotenv()
 
-# Get API keys from environment variables
-API_KEY = os.environ.get('ALPACA_API_KEY')
-API_SECRET = os.environ.get('ALPACA_SECRET_KEY')
+API_KEY = os.environ['BINANCE_API_KEY']
+API_SECRET = os.environ['BINANCE_API_SECRET']
+
+# Initialize Binance Futures
+exchange = ccxt.binance({
+    'apiKey': API_KEY,
+    'secret': API_SECRET,
+    'options': {'defaultType': 'future'}
+})
+exchange.set_sandbox_mode(True) # Enable testnet
+
+# Load markets
+exchange.load_markets()
+
+open_orders = exchange.fetch_open_orders(symbol='ETH/USDT:USDT')
+for o in open_orders:
+    print(o)
 
 
-from alpaca.trading.client import TradingClient
-
-trading_client = TradingClient(API_KEY, API_SECRET,paper=True)
-
-account = trading_client.get_account()
-
-print(account)
-print(account.cash)
-
-from alpaca.trading.client import TradingClient
-from alpaca.trading.requests import MarketOrderRequest
-from alpaca.trading.enums import OrderSide, TimeInForce
-
-# preparing orders
-market_order_data = MarketOrderRequest(
-                    symbol="ETH/USD",
-                    qty=0.009975,
-                    side=OrderSide.SELL,
-                    time_in_force=TimeInForce.GTC
-                    )
-
-# Market order
-market_order = trading_client.submit_order(
-                order_data=market_order_data
-               )
+# Print position siz
