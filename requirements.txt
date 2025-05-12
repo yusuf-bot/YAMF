@@ -1,5 +1,5 @@
 python-dotenv==1.0.0
-ccxt==4.0.0
+ccxt==4.4.49
 beautifulsoup4==4.12.2
 flask==2.3.3
 requests==2.31.0
