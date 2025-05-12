@@ -1,167 +1,354 @@
-from dotenv import load_dotenv
 import os
-import ccxt
 import time
-from datetime import datetime, timedelta
+import logging
+import traceback
+from datetime import datetime, timezone
+import imaplib
+import email
+from email.header import decode_header
+from bs4 import BeautifulSoup
+import ccxt
+from dotenv import load_dotenv
+import re
+import threading
+from flask import Flask, request, jsonify
 
-# === Load environment variables ===
+# Load environment variables
 load_dotenv()
-API_KEY = os.environ.get("BINANCE_API_KEY")
-API_SECRET = os.environ.get("BINANCE_API_SECRET")
 
-print(f"API Key loaded: {'Yes' if API_KEY else 'No'}")
-print(f"API Secret loaded: {'Yes' if API_SECRET else 'No'}")
+# Logging setup
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger()
 
-# === CONFIG ===
-symbol = 'ETH/USDT'
-base = 'ETH'
-quote = 'USDT'
-timeframe = '1m'
-trend_timeframe = '1h'
-trend_period = 200
-atr_period = 14
-trade_amount = 5
+# Environment config
+EMAIL_SERVER = os.environ['IMAP_SERVER']
+EMAIL_USERNAME = os.environ['EMAIL_USERNAME3']
+EMAIL_PASSWORD = os.environ['EMAIL_PASSWORD3']
+TRADE_SIGNAL_FROM = os.environ['TRADE_SIGNAL_FROM']
 
-# === Initialize Exchange ===
-exchange = ccxt.binanceusdm({
+API_KEY = os.environ['BINANCE_API_KEY']
+API_SECRET = os.environ['BINANCE_API_SECRET']
+
+# Initialize Binance Futures
+exchange = ccxt.binance({
     'apiKey': API_KEY,
     'secret': API_SECRET,
-    'enableRateLimit': True,
     'options': {'defaultType': 'future'}
 })
-exchange.set_sandbox_mode(True)
+exchange.set_sandbox_mode(True)  # Set to False for live
 
-# === Strategy State ===
-candles = []
-position = None
-entry_price = None
-trail_price = None
+PROCESSED_EMAIL_IDS = set()
+POSITIONS = {}
+START_DATETIME = datetime.now(timezone.utc)
+LAST_CHECK_TIME = datetime.now(timezone.utc)
+BOT_STATUS = "running"
 
-# === Historical Candle Fetch ===
-def preload_45m_candles():
-    lookback_minutes = trend_period * 60
-    since = int((datetime.utcnow() - timedelta(minutes=lookback_minutes)).timestamp() * 1000)
-    try:
-        ohlcv = exchange.fetch_ohlcv(symbol, timeframe=trend_timeframe, since=since, limit=trend_period + 1)
-        return [{
-            'timestamp': o[0],
-            'open': o[1],
-            'high': o[2],
-            'low': o[3],
-            'close': o[4]
-        } for o in ohlcv]
-    except Exception as e:
-        print(f"Error fetching historical candles: {e}")
+# Initialize Flask app
+app = Flask(__name__)
+
+# === Email Functions ===
+
+def connect_to_email():
+    mail = imaplib.IMAP4_SSL(EMAIL_SERVER)
+    mail.login(EMAIL_USERNAME, EMAIL_PASSWORD)
+    logger.info("Connected to email server.")
+    return mail
+
+def get_unseen_trade_emails(mail):
+    
+    mail.select("tv")
+    status, messages = mail.search(None, f'(FROM "{TRADE_SIGNAL_FROM}")')
+    if status != 'OK':
+        logger.warning("Failed to search emails.")
         return []
 
-# === Live Candle Fetch (1m) ===
-def fetch_latest_candle():
-    try:
-        ohlcv = exchange.fetch_ohlcv(symbol, timeframe='1m', limit=1)
-        if ohlcv:
-            return {
-                'timestamp': ohlcv[-1][0],
-                'open': ohlcv[-1][1],
-                'high': ohlcv[-1][2],
-                'low': ohlcv[-1][3],
-                'close': ohlcv[-1][4]
-            }
-    except Exception as e:
-        print(f"Error fetching 1m candle: {e}")
+    email_ids = messages[0].split()
+    new_emails = []
+    
+    for eid in email_ids:
+        eid_str = eid.decode('utf-8')
+        if eid_str in PROCESSED_EMAIL_IDS:
+            continue
+        
+        # Fetch the email's date header
+        status, data = mail.fetch(eid, '(BODY.PEEK[HEADER.FIELDS (DATE)])')
+        if status != 'OK' or not data or not data[0]:
+            continue
+
+        raw_date = data[0][1].decode(errors='ignore').strip()
+        match = re.search(r'Date:\s*(.*)', raw_date, re.IGNORECASE)
+        if not match:
+            continue
+   
+        try:
+            email_datetime = email.utils.parsedate_to_datetime(match.group(1)).astimezone(timezone.utc)
+            if email_datetime > START_DATETIME:
+                new_emails.append(eid)
+                logger.info("Fetching unseen trade emails.")
+        except Exception as e:
+            logger.warning(f"Failed to parse email date: {raw_date} | Error: {e}")
+
+    return new_emails
+
+
+def extract_text_from_html(html_content):
+    soup = BeautifulSoup(html_content, "html.parser")
+    paragraphs = soup.find_all("p")
+    for p in paragraphs:
+        text = p.get_text(strip=True)
+        if 'entry' in text.lower():  # Basic signal keyword filter
+            return text
     return None
 
-# === Helpers ===
-def calculate_atr(candles, period):
-    trs = []
-    for i in range(1, len(candles)):
-        high = candles[i]['high']
-        low = candles[i]['low']
-        prev_close = candles[i - 1]['close']
-        tr = max(high - low, abs(high - prev_close), abs(low - prev_close))
-        trs.append(tr)
-    return sum(trs[-period:]) / period if len(trs) >= period else None
-
-def calculate_middle(candles, period):
-    highs = [c['high'] for c in candles[-period-1:-1]]
-    lows = [c['low'] for c in candles[-period-1:-1]]
-    return (max(highs) + min(lows)) / 2 if highs and lows else None
-
-def place_market_order(side, amount):
+def get_email_body_by_id(mail, eid):
     try:
-        print(f"Placing market {side} order for {amount} {symbol}")
-        return exchange.create_market_order(symbol, side, amount)
+        status, msg_data = mail.fetch(eid, '(RFC822)')
+        if status != 'OK':
+            logger.error("Failed to fetch email.")
+            return None
+
+        raw_email = msg_data[0][1]
+        msg = email.message_from_bytes(raw_email)
+
+        html_body = None
+
+        if msg.is_multipart():
+            for part in msg.walk():
+                content_type = part.get_content_type()
+                if content_type == "text/html":
+                    html_body = part.get_payload(decode=True).decode()
+                    break
+        else:
+            if msg.get_content_type() == "text/html":
+                html_body = msg.get_payload(decode=True).decode()
+
+        if html_body:
+            return extract_text_from_html(html_body)
+        else:
+            logger.warning("No HTML body found.")
+            return None
     except Exception as e:
-        print(f"Order Error: {e}")
+        logger.error(f"Error: {e}")
         return None
 
-def close_position():
+# === Trading Logic ===
+
+def parse_trade_signal(text):
+    parts = text.strip().split()
+    logger.info(f"Signal parts: {parts}")
+    if len(parts) != 7:
+        raise ValueError("Signal format invalid")
+
     try:
-        position_data = exchange.fapiPrivate_get_positionrisk()
-        for p in position_data:
-            if p['symbol'] == symbol.replace('/', '') and float(p['positionAmt']) != 0:
-                amt = abs(float(p['positionAmt']))
-                side = 'sell' if float(p['positionAmt']) > 0 else 'buy'
-                place_market_order(side, amt)
+        size = float(parts[4])
+        size = size if size > 0 else 0.01
+    except ValueError:
+        size = 0.01
+
+    return {
+        'symbol': parts[1].upper().replace('/', ''),
+        'direction': parts[2].lower(),
+        'price': float(parts[3]),
+        'size': size,
+        'trail_offset': float(parts[5]),
+        'trail_amount': float(parts[6])
+    }
+
+def place_market_order(symbol, direction, amount):
+    return exchange.create_market_order(symbol=symbol, side=direction, amount=amount)
+
+def place_trailing_stop(symbol, direction, entry_price, trail_offset, trail_point, amount):
+    side = 'sell' if direction == 'buy' else 'buy'
+
+    current_price = exchange.fetch_ticker(symbol)['last']
+    activation_price = current_price - trail_point if direction == 'sell' else entry_price + trail_point
+    max_attempts = 5
+    position_size = 0
+
+    callback_rate = (trail_offset / entry_price) * 100
+    callback_rate = max(0.1, min(callback_rate, 5.0))
+    logger.info(f"Callback rate: {callback_rate}")
+    logger.info(f"Placing trailing stop for {symbol} with activation price {activation_price} and callback rate {callback_rate}")
+    logger.info(f"current: {current_price} {(activation_price/current_price)*100}%")
+
+    for attempt in range(max_attempts):
+        try:
+            positions = exchange.fetch_positions()
+            for pos in positions:
+                if pos['symbol'] == 'ETH/USDT:USDT':
+                    size = float(pos['contracts'])
+                    if size > 0:
+                        position_size = size
+                        break
+
+            if position_size > 0:
+                break
+            time.sleep(1)
+
+        except Exception as e:
+            logger.warning(f"Attempt {attempt+1}: Error fetching position size: {e}")
+            time.sleep(1)
+
+    if position_size == 0:
+        logger.warning(f"No open position to place trailing stop for {symbol}")
+        return None
+
+    try:
+        order = exchange.create_order(
+            symbol=symbol,
+            type='TRAILING_STOP_MARKET',
+            side=side,
+            amount=amount,
+            params={
+                'activationPrice': round(float(activation_price), 2),
+                'callbackRate': round(float(callback_rate), 2),
+                'reduceOnly': True
+            }
+        )
+        logger.info(f"Trailing stop order placed: {order}")
+        return order
+
     except Exception as e:
-        print(f"Close position error: {e}")
+        logger.error(f"Error placing trailing stop: {e}")
 
-# === Initialize candle history ===
-candles = preload_45m_candles()
-print(f"Preloaded {len(candles)} 45m candles.")
+        # Fallback to market order if order would immediately trigger
+        if 'Order would immediately trigger' in str(e):
+            logger.warning(f"Trailing stop would immediately trigger. Closing position with market order.")
+            try:
+                close_order = place_market_order(symbol, direction, amount)
+                logger.info(f"Market close order result: {close_order}")
+                return close_order
+            except Exception as e2:
+                logger.error(f"Failed to close position with market order: {e2}")
+                return None
 
-# === Main Loop ===
-while True:
-    candle = fetch_latest_candle()
-    if candle:
-        if not candles or candle['timestamp'] > candles[-1]['timestamp']:
-            print(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} New candle: {candle}")
-            candles.append(candle)
-            if len(candles) > trend_period + 1:
-                middle = calculate_middle(candles, trend_period)
-                atr = calculate_atr(candles, atr_period)
-                if middle is None or atr is None:
-                    continue
+        return None
 
-                epsilon = atr
-                src_prev = (candles[-2]['high'] + candles[-2]['low'] + candles[-2]['close']) / 3
-                is_60min = (len(candles) - 1) % 60 == 0  # every 45th 1m candle = new 45m bar
+# === Main Trading Handler ===
 
-                print(f"Middle: {middle}, ATR: {atr}, src_prev: {src_prev}, long: {src_prev > middle + epsilon}, short: {src_prev < middle - epsilon}")
+def process_signal(text):
+    try:
+        signal = parse_trade_signal(text)
+        symbol = f"{signal['symbol']}"
 
-                # === Entry logic on 45m candle ===
-                if is_60min and position is None:
-                    if src_prev > middle + epsilon:
-                        res = place_market_order('buy', trade_amount)
-                        if res:
-                            position = 'long'
-                            entry_price = candle['close']
-                            trail_price = entry_price - atr
-                            print("Long Entry", entry_price, trail_price)
-                    elif src_prev < middle - epsilon:
-                        res = place_market_order('sell', trade_amount)
-                        if res:
-                            position = 'short'
-                            entry_price = candle['close']
-                            trail_price = entry_price + atr
-                            print("Short Entry", entry_price, trail_price)
+        logger.info(f"Processing signal: {signal}")
 
-                # === Exit logic every 1 minute ===
-                if position == 'long':
-                    trail_price = max(trail_price, candle['close'] - atr)
-                    if candle['close'] < trail_price:
-                        res = place_market_order('sell', trade_amount)
-                        print("Long Exit", candle['close'], trail_price)
-                        position = None
-                        entry_price = None
-                        trail_price = None
+        market_order = place_market_order(symbol, signal['direction'], signal['size'])
+        logger.info(f"Market order result: {market_order}")
 
-                elif position == 'short':
-                    trail_price = min(trail_price, candle['close'] + atr)
-                    if candle['close'] > trail_price:
-                        res = place_market_order('buy', trade_amount)
-                        print("Short Exit", candle['close'], trail_price)
-                        position = None
-                        entry_price = None
-                        trail_price = None
+        trailing_order = place_trailing_stop(
+            symbol, signal['direction'], signal['price'], signal['trail_offset'], signal['trail_amount'], signal['size']
+        )
 
-    time.sleep(60)  # Run every 1 minute
+        POSITIONS[signal['symbol']] = {
+            'direction': signal['direction'],
+            'entry_price': signal['price'],
+            'size': signal['size'],
+            'trailing_order_id': trailing_order.get('id') if trailing_order else None
+        }
+        return True
+    except Exception as e:
+        logger.error(f"Error processing signal: {e}")
+        logger.error(traceback.format_exc())
+        return False
+
+# === Email Checking Function ===
+
+def check_emails():
+    global LAST_CHECK_TIME, BOT_STATUS
+    
+    try:
+        LAST_CHECK_TIME = datetime.now(timezone.utc)
+        mail = connect_to_email()
+        new_emails = get_unseen_trade_emails(mail)
+        logger.info(f"New emails: {new_emails}")
+        
+        for eid in new_emails:
+            eid_str = eid.decode('utf-8')
+            text = get_email_body_by_id(mail, eid)
+            if text:
+                logger.info(f"Parsed signal: {text}")
+                process_signal(text)
+                PROCESSED_EMAIL_IDS.add(eid_str)
+        
+        mail.logout()
+        return True
+    except Exception as e:
+        logger.error(f"Email check error: {e}")
+        BOT_STATUS = "error"
+        return False
+
+# === Background Task ===
+
+def background_task():
+    global BOT_STATUS
+    logger.info("Starting background email checking task")
+    BOT_STATUS = "running"
+    
+    while True:
+        try:
+            check_emails()
+            time.sleep(10)
+        except Exception as e:
+            logger.error(f"Background task error: {e}")
+            BOT_STATUS = "error"
+            time.sleep(30)  # Wait longer on error
+
+# === Flask Routes ===
+
+@app.route('/health', methods=['GET'])
+def health_check():
+    """Health check endpoint for monitoring"""
+    time_since_last_check = (datetime.now(timezone.utc) - LAST_CHECK_TIME).total_seconds()
+    
+    return jsonify({
+        'status': BOT_STATUS,
+        'uptime': (datetime.now(timezone.utc) - START_DATETIME).total_seconds(),
+        'last_check': LAST_CHECK_TIME.isoformat(),
+        'seconds_since_last_check': time_since_last_check,
+        'positions': len(POSITIONS),
+        'processed_emails': len(PROCESSED_EMAIL_IDS)
+    }), 200 if BOT_STATUS == "running" and time_since_last_check < 60 else 500
+
+@app.route('/positions', methods=['GET'])
+def get_positions():
+    """Get current positions"""
+    return jsonify(POSITIONS)
+
+@app.route('/check-now', methods=['POST'])
+def trigger_check():
+    """Manually trigger an email check"""
+    success = check_emails()
+    return jsonify({'success': success})
+
+@app.route('/webhook', methods=['POST'])
+def webhook():
+    """Webhook endpoint for direct signal processing"""
+    try:
+        data = request.json
+        if not data or 'signal' not in data:
+            return jsonify({'error': 'Invalid request format'}), 400
+            
+        signal_text = data['signal']
+        logger.info(f"Received webhook signal: {signal_text}")
+        
+        success = process_signal(signal_text)
+        return jsonify({'success': success})
+    except Exception as e:
+        logger.error(f"Webhook error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+# === Main Function ===
+
+def main():
+    logger.info("Starting trading bot with Flask server")
+    
+    # Start the background task in a separate thread
+    bg_thread = threading.Thread(target=background_task, daemon=True)
+    bg_thread.start()
+    
+    # Start the Flask server
+    app.run(host='0.0.0.0', port=5000)
+
+if __name__ == "__main__":
+    main()
