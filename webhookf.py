@@ -48,16 +48,17 @@ def connect_to_email():
 
 def get_unseen_trade_emails(mail):
     
-    mail.select("tv")
-    status, messages = mail.search(None, f'(FROM "{TRADE_SIGNAL_FROM}")')
+    mail.select("tv",readonly=False)
+    status, messages = mail.search(None, "ALL") 
     if status != 'OK':
         logger.warning("Failed to search emails.")
         return []
 
     email_ids = messages[0].split()
     new_emails = []
-    
+
     for eid in email_ids:
+   
         eid_str = eid.decode('utf-8')
         if eid_str in PROCESSED_EMAIL_IDS:
             continue
@@ -76,6 +77,7 @@ def get_unseen_trade_emails(mail):
             email_datetime = email.utils.parsedate_to_datetime(match.group(1)).astimezone(timezone.utc)
             if email_datetime > START_DATETIME:
                 new_emails.append(eid)
+           
                 logger.info("Fetching unseen trade emails.")
         except Exception as e:
             logger.warning(f"Failed to parse email date: {raw_date} | Error: {e}")
@@ -98,7 +100,6 @@ def get_email_body_by_id(mail, eid):
         if status != 'OK':
             print("Failed to fetch email.")
             return None
-
         raw_email = msg_data[0][1]
         msg = email.message_from_bytes(raw_email)
 
@@ -127,7 +128,6 @@ def get_email_body_by_id(mail, eid):
 
 def parse_trade_signal(text):
     parts = text.strip().split()
-    print(parts)
     if len(parts) != 7:
         raise ValueError("Signal format invalid")
 
@@ -141,7 +141,7 @@ def parse_trade_signal(text):
         'symbol': parts[1].upper().replace('/', ''),
         'direction': parts[2].lower(),
         'price': float(parts[3]),
-        'size': size,
+        'size': float(size),
         'trail_offset': float(parts[5]),
         'trail_amount': float(parts[6])
     }
@@ -153,7 +153,7 @@ def place_trailing_stop(symbol, direction, entry_price, trail_offset, trail_poin
     side = 'sell' if direction == 'buy' else 'buy'
 
     current_price = exchange.fetch_ticker(symbol)['last']
-    activation_price = current_price - trail_point if direction == 'sell' else entry_price + trail_point
+    activation_price = current_price - trail_point if direction == 'sell' else current_price + trail_point
     max_attempts = 5
     position_size = 0
 
@@ -253,18 +253,20 @@ def main():
         try:
             mail = connect_to_email()
             new_emails = get_unseen_trade_emails(mail)
-            logger.info(f"New emails: {new_emails}")
             for eid in new_emails:
                 eid_str = eid.decode('utf-8')
                 text = get_email_body_by_id(mail, eid)
+             
                 if text:
                     logger.info(f"Parsed signal: {text}")
                     process_signal(text)
-                    PROCESSED_EMAIL_IDS.add(eid_str)
+                    
+                    mail.store(eid, '+FLAGS', '\\Deleted')
+            mail.expunge()
             mail.logout()
         except Exception as e:
             logger.error(f"Loop error: {e}")
-        time.sleep(10)
+        time.sleep(60)
 
 if __name__ == "__main__":
     main()
