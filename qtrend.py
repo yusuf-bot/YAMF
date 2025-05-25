@@ -16,11 +16,11 @@ api_secret = os.getenv('BINANCE_API_SECRET')
 client = Client(api_key, api_secret)
 
 # Strategy parameters
-SYMBOL = 'BTCUSDT'  # Trading pair
+SYMBOL = 'ETHUSDT'  # Trading pair
 TIMEFRAME = Client.KLINE_INTERVAL_1MINUTE  # Timeframe (1h)
 TREND_PERIOD = 200  # Trend period
 ATR_PERIOD = 14  # ATR period
-INITIAL_CAPITAL = 100  # Initial capital
+INITIAL_CAPITAL = 1000  # Initial capital
 POSITION_SIZE = 0.15  # Fraction of capital to use per trade
 
 # Function to calculate ATR

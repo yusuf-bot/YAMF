@@ -1,132 +1,122 @@
-import requests
+import backtrader as bt
 import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-import ccxt
+from binance.client import Client
 import datetime
 
-# Step 1: Fetch historical data from Binance
-symbol = 'PEPEUSDT'
-timeframe = '1m'  # 1-minute candles
-total_limit = 8000  # Total number of candles to fetch
-binance_limit = 1000  # Binance API limit per request
+# -------------------------------
+# Step 1: Fetch 1-min ETHUSDT Data from Binance
+# -------------------------------
+client = Client()
 
-def get_binance_data(symbol='PEPEUSDT', timeframe='1m', days=1):
-    exchange = ccxt.binance()
-    
-    # Calculate timestamps
-    end_date = datetime.datetime.now()
-    start_date = end_date - datetime.timedelta(days=days)
-    
-    # Convert to milliseconds timestamp
-    since = int(start_date.timestamp() * 1000)
-    
-    # Fetch OHLCV data in batches
-    all_candles = []
-    while since < end_date.timestamp() * 1000:
-        candles = exchange.fetch_ohlcv(symbol, timeframe, since)
-        if len(candles) == 0:
-            break
-        
-        since = candles[-1][0] + 1  # Next timestamp after the last received
-        all_candles.extend(candles)
-    
-    # Create DataFrame
-    df = pd.DataFrame(all_candles, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
-    df['datetime'] = pd.to_datetime(df['timestamp'], unit='ms')
-    df.set_index('datetime', inplace=True)
-    print(f"Data fetched. Total candles: {len(df)}")
-    
-    return df
+symbol = 'ETHUSDT'
+interval = Client.KLINE_INTERVAL_1MINUTE
+start_str = '17 Jan, 2025'
+end_str = '24 May, 2025'
 
-data = get_binance_data(symbol=symbol, timeframe=timeframe, days=8)
-print(data.shape)
-print(data.head())
+klines = client.get_historical_klines(symbol, interval, start_str, end_str)
 
-# Step 2: Calculate ATR and breakout levels
-lookback = 5  # Lookback period for ATR and previous high/low
-atr_factor = 0.75  # ATR multiplier for breakout threshold
+# Convert to DataFrame
+df = pd.DataFrame(klines, columns=[
+    'timestamp', 'open', 'high', 'low', 'close', 'volume',
+    'close_time', 'qav', 'num_trades', 'taker_base_vol', 'taker_quote_vol', 'ignore'
+])
+df['timestamp'] = pd.to_datetime(df['timestamp'], unit='ms')
+df.set_index('timestamp', inplace=True)
+df = df[['open', 'high', 'low', 'close', 'volume']].astype(float)
 
-# Calculate True Range (TR)
-data['high_low'] = data['high'] - data['low']
-data['high_close'] = np.abs(data['high'] - data['close'].shift(1))
-data['low_close'] = np.abs(data['low'] - data['close'].shift(1))
-data['tr'] = data[['high_low', 'high_close', 'low_close']].max(axis=1)
+# -------------------------------
+# Step 2: Smart Grid Strategy (Backtrader)
+# -------------------------------
+class SmartGridStrategy(bt.Strategy):
+    params = dict(
+        upper_bound=3000,
+        lower_bound=2000,
+        grid_qty=20,
+        leverage=3,
+        stake_pct=10,
+        commission=0.25 / 100,
+    )
 
-# Calculate ATR
-data['atr'] = data['tr'].rolling(window=lookback).mean()
+    def __init__(self):
+        self.grid_lines = []
+        self.order_flags = []
+        self.total_comm = 0.0
+        self.orders = []
 
-# Calculate previous close
-data['prev_close'] = data['close'].shift(1)
+        step = (self.p.upper_bound - self.p.lower_bound) / (self.p.grid_qty - 1)
+        for i in range(self.p.grid_qty):
+            price = self.p.lower_bound + i * step
+            self.grid_lines.append(price)
+            self.order_flags.append(False)
 
-# Calculate breakout levels
-data['long_breakout'] = data['prev_close'] + data['atr'] * atr_factor
-data['short_breakout'] = data['prev_close'] - data['atr'] * atr_factor
-data = data.dropna()
-data = data[['open', 'high', 'low', 'close', 'volume', 'atr', 'long_breakout', 'short_breakout']].astype(float)
-data_list = data.to_numpy().tolist()
-print(data_list[0])
+        self.t3 = bt.ind.EMA(self.data.close, period=70) * (1 + 0.7) - bt.ind.EMA(bt.ind.EMA(self.data.close, period=70), period=70) * 0.7
 
-# Step 3: Calculate PnL
-initial_capital = 100
-capital = initial_capital
-position = 0  # 1 for long, -1 for short, 0 for neutral
-entry_price = 0
-pnl = 0
+    def log(self, txt):
+        dt = self.datas[0].datetime.datetime(0)
+        print(f'[{dt}] {txt}')
 
-for i in range(len(data_list)):
-    open_price = data_list[i][0]
-    high_price = data_list[i][1]
-    low_price = data_list[i][2]
-    close_price = data_list[i][3]
-    long_breakout = data_list[i][6]
-    short_breakout = data_list[i][7]
+    def notify_order(self, order):
+        if order.status in [order.Submitted, order.Accepted]:
+            return
 
-    # Detect breakout conditions
-    long_condition = high_price > long_breakout and low_price < long_breakout
-    short_condition = high_price > short_breakout and low_price < short_breakout
+        dt = self.datas[0].datetime.datetime(0)
+        if order.status == order.Completed:
+            self.total_comm += order.executed.comm
+            if order.isbuy():
+                self.log(f'BUY EXECUTED: Price={order.executed.price:.2f}, Size={order.executed.size:.4f}, Cost={order.executed.value:.2f}, Comm={order.executed.comm:.2f}')
+            else:
+                self.log(f'SELL EXECUTED: Price={order.executed.price:.2f}, Size={order.executed.size:.4f}, Cost={order.executed.value:.2f}, Comm={order.executed.comm:.2f}')
+        elif order.status == order.Canceled:
+            self.log(f'ORDER CANCELLED')
+        elif order.status == order.Margin:
+            self.log(f'ORDER MARGIN ISSUE')
+        elif order.status == order.Rejected:
+            self.log(f'ORDER REJECTED')
 
-    # Resolve conflict if both conditions are true
-    if long_condition and short_condition:
-        if abs(open_price - long_breakout) < abs(open_price - short_breakout):
-            short_condition = False
-        else:
-            long_condition = False
+    def notify_trade(self, trade):
+        if trade.isclosed:
+            self.log(f'TRADE CLOSED: Gross PnL={trade.pnl:.2f}, Net PnL={trade.pnlcomm:.2f}')
 
-    # Close existing position before entering a new one
-    if position == 1 and short_condition:  # Close long, enter short
-        exit_price = short_breakout
-        position_size = capital / entry_price  # How many units you bought
-        pnl += (exit_price - entry_price) * position_size
-        capital = initial_capital + pnl
-        position = -1
-        entry_price = short_breakout
-    elif position == -1 and long_condition:  # Close short, enter long
-        exit_price = long_breakout
-        position_size = capital / entry_price  # How many units you bought
-        pnl += (exit_price - entry_price) * position_size  # Short profit: (entry - exit)
-        capital = initial_capital + pnl
-        position = 1                                                       
-        entry_price = long_breakout
-    # Enter new position if none exists
-    elif position == 0:
-        if long_condition:                                          
-            position = 1
-            entry_price = long_breakout
-        elif short_condition:
-            position = -1
-            entry_price = short_breakout
+    def next(self):
+        contracts = self.p.stake_pct * (self.broker.getvalue() / 100) / self.data.close[0] * self.p.leverage
 
-# Close final position at the last close price
-if position != 0:
-    exit_price = data_list[-1][3]  # Last close price
-    if position == 1:  # Long position
-        position_size = capital / entry_price  # How many units you bought
-        pnl += (exit_price - entry_price) * position_size
-    elif position == -1:  # Short position
-        position_size = capital / entry_price  # How many units you bought
-        pnl += (exit_price - entry_price) * position_size
-    capital = initial_capital + pnl
+        # Entry Logic
+        if self.t3[0] > self.t3[-1] and self.data.close[0] > self.t3[0]:
+            for i in range(len(self.grid_lines)):
+                if self.data.close[0] < self.grid_lines[i] and not self.order_flags[i]:
+                    self.buy(size=contracts)
+                    self.order_flags[i] = True
+                    break
 
-print("Final PnL:", pnl)
-print("Final Capital:", capital)
+        # Exit Logic
+        for i in range(len(self.grid_lines) - 1):
+            if self.order_flags[i]:
+                next_price = self.grid_lines[i + 1]
+                if self.data.close[0] > next_price:
+                    self.sell(size=contracts)
+                    self.order_flags[i] = False
+                    break
+
+    def stop(self):
+        self.log(f'Final Portfolio Value: {self.broker.getvalue()}')
+        self.log(f'Total Commission Paid: {self.total_comm:.2f}')
+        if self.position:
+            self.log(f'OPEN TRADE: Size={self.position.size:.4f}, Entry Price={self.position.price:.2f}, Current Price={self.data.close[0]:.2f}')
+
+
+# -------------------------------
+# Step 3: Run Backtest
+# -------------------------------
+data_feed = bt.feeds.PandasData(dataname=df)
+
+cerebro = bt.Cerebro()
+cerebro.addstrategy(SmartGridStrategy)
+cerebro.adddata(data_feed)
+cerebro.broker.setcash(100.0)
+cerebro.broker.setcommission(commission=0.00125)
+
+print('Starting Portfolio Value:', cerebro.broker.getvalue())
+cerebro.run()
+print('Final Portfolio Value:', cerebro.broker.getvalue(),cerebro.broker.getcash())
+
+cerebro.plot(style='candlestick')

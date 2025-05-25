@@ -1,0 +1,644 @@
+2025-05-17 19:28:53,529 - INFO - Starting Grid Bot...
+2025-05-17 19:28:57,228 - INFO - Fetched 109 candles, latest close: 2.3458
+2025-05-17 19:28:57,236 - INFO - RSI: 49.65, Previous RSI: 49.53, Oversold: 25
+2025-05-17 19:28:57,238 - INFO - RSI Buy Trigger: False
+2025-05-17 19:28:57,239 - INFO - T3: 2.3530, Previous T3: 2.3551
+2025-05-17 19:28:57,244 - INFO - T3 Signals: Long=False, Basic Long Condition=False, Cross=False
+2025-05-17 19:28:57,244 - INFO - Active orders: 0, Current price: 2.3458
+2025-05-17 19:28:57,246 - INFO - Price 2.3458 between grid levels 2.3110 and 2.3627
+2025-05-17 19:28:57,246 - INFO - No entry condition met (RSI or T3 signal not active)
+2025-05-17 19:43:57,852 - INFO - Fetched 109 candles, latest close: 2.3458
+2025-05-17 19:43:57,857 - INFO - RSI: 49.63, Previous RSI: 49.65, Oversold: 25
+2025-05-17 19:43:57,857 - INFO - RSI Buy Trigger: False
+2025-05-17 19:43:57,863 - INFO - T3: 2.3506, Previous T3: 2.3527
+2025-05-17 19:43:57,863 - INFO - T3 Signals: Long=False, Basic Long Condition=False, Cross=False
+2025-05-17 19:43:57,865 - INFO - Active orders: 0, Current price: 2.3458
+2025-05-17 19:43:57,865 - INFO - Price 2.3458 between grid levels 2.3110 and 2.3627
+2025-05-17 19:43:57,865 - INFO - No entry condition met (RSI or T3 signal not active)
+2025-05-17 19:58:58,449 - INFO - Fetched 109 candles, latest close: 2.3337
+2025-05-17 19:58:58,461 - INFO - RSI: 49.46, Previous RSI: 49.63, Oversold: 25
+2025-05-17 19:58:58,463 - INFO - RSI Buy Trigger: False
+2025-05-17 19:58:58,479 - INFO - T3: 2.3486, Previous T3: 2.3506
+2025-05-17 19:58:58,479 - INFO - T3 Signals: Long=False, Basic Long Condition=False, Cross=False
+2025-05-17 19:58:58,479 - INFO - Active orders: 0, Current price: 2.3337
+2025-05-17 19:58:58,482 - INFO - Price 2.3337 between grid levels 2.3110 and 2.3627
+2025-05-17 19:58:58,482 - INFO - No entry condition met (RSI or T3 signal not active)
+2025-05-17 20:13:59,047 - INFO - Fetched 109 candles, latest close: 2.3358
+2025-05-17 20:13:59,052 - INFO - RSI: 49.52, Previous RSI: 49.46, Oversold: 25
+2025-05-17 20:13:59,052 - INFO - RSI Buy Trigger: False
+2025-05-17 20:13:59,056 - INFO - T3: 2.3228, Previous T3: 2.3253
+2025-05-17 20:13:59,057 - INFO - T3 Signals: Long=False, Basic Long Condition=False, Cross=False
+2025-05-17 20:13:59,057 - INFO - Active orders: 0, Current price: 2.3358
+2025-05-17 20:13:59,058 - INFO - Price 2.3358 between grid levels 2.3110 and 2.3627
+2025-05-17 20:13:59,058 - INFO - No entry condition met (RSI or T3 signal not active)
+2025-05-17 20:28:59,421 - INFO - Fetched 109 candles, latest close: 2.3358
+2025-05-17 20:28:59,424 - INFO - RSI: 48.53, Previous RSI: 49.52, Oversold: 25
+2025-05-17 20:28:59,425 - INFO - RSI Buy Trigger: False
+2025-05-17 20:28:59,428 - INFO - T3: 2.3437, Previous T3: 2.3456
+2025-05-17 20:28:59,429 - INFO - T3 Signals: Long=False, Basic Long Condition=False, Cross=False
+2025-05-17 20:28:59,429 - INFO - Active orders: 0, Current price: 2.3358
+2025-05-17 20:28:59,430 - INFO - Price 2.3358 between grid levels 2.3110 and 2.3627
+2025-05-17 20:28:59,430 - INFO - No entry condition met (RSI or T3 signal not active)
+2025-05-17 20:44:00,044 - INFO - Fetched 109 candles, latest close: 2.3168
+2025-05-17 20:44:00,048 - INFO - RSI: 49.44, Previous RSI: 47.60, Oversold: 25
+2025-05-17 20:44:00,048 - INFO - RSI Buy Trigger: False
+2025-05-17 20:44:00,051 - INFO - T3: 2.3414, Previous T3: 2.3433
+2025-05-17 20:44:00,051 - INFO - T3 Signals: Long=False, Basic Long Condition=False, Cross=False
+2025-05-17 20:44:00,051 - INFO - Active orders: 0, Current price: 2.3168
+2025-05-17 20:44:00,051 - INFO - Price 2.3168 between grid levels 2.3110 and 2.3627
+2025-05-17 20:44:00,053 - INFO - No entry condition met (RSI or T3 signal not active)
+2025-05-17 20:59:00,621 - INFO - Fetched 109 candles, latest close: 2.5300
+2025-05-17 20:59:00,626 - INFO - RSI: 50.59, Previous RSI: 50.59, Oversold: 25
+2025-05-17 20:59:00,627 - INFO - RSI Buy Trigger: False
+2025-05-17 20:59:00,630 - INFO - T3: 2.3395, Previous T3: 2.3414
+2025-05-17 20:59:00,630 - INFO - T3 Signals: Long=False, Basic Long Condition=False, Cross=False
+2025-05-17 20:59:00,634 - INFO - Active orders: 0, Current price: 2.5300
+2025-05-17 20:59:00,637 - INFO - Price 2.5300 between grid levels 2.5178 and 2.5695
+2025-05-17 20:59:00,640 - INFO - No entry condition met (RSI or T3 signal not active)
+2025-05-17 21:14:01,236 - INFO - Fetched 109 candles, latest close: 2.3196
+2025-05-17 21:14:01,237 - INFO - RSI: 49.57, Previous RSI: 50.59, Oversold: 25
+2025-05-17 21:14:01,237 - INFO - RSI Buy Trigger: False
+2025-05-17 21:14:01,247 - INFO - T3: 2.3388, Previous T3: 2.3405
+2025-05-17 21:14:01,247 - INFO - T3 Signals: Long=False, Basic Long Condition=False, Cross=False
+2025-05-17 21:14:01,247 - INFO - Active orders: 0, Current price: 2.3196
+2025-05-17 21:14:01,247 - INFO - Price 2.3196 between grid levels 2.3110 and 2.3627
+2025-05-17 21:14:01,250 - INFO - No entry condition met (RSI or T3 signal not active)
+2025-05-17 21:29:01,889 - INFO - Fetched 109 candles, latest close: 2.3245
+2025-05-17 21:29:01,904 - INFO - RSI: 49.56, Previous RSI: 48.76, Oversold: 25
+2025-05-17 21:29:01,906 - INFO - RSI Buy Trigger: False
+2025-05-17 21:29:01,920 - INFO - T3: 2.3356, Previous T3: 2.3373
+2025-05-17 21:29:01,922 - INFO - T3 Signals: Long=False, Basic Long Condition=False, Cross=False
+2025-05-17 21:29:01,924 - INFO - Active orders: 0, Current price: 2.3245
+2025-05-17 21:29:01,924 - INFO - Price 2.3245 between grid levels 2.3110 and 2.3627
+2025-05-17 21:29:01,928 - INFO - No entry condition met (RSI or T3 signal not active)
+2025-05-17 21:44:02,577 - INFO - Fetched 109 candles, latest close: 2.3245
+2025-05-17 21:44:02,590 - INFO - RSI: 49.54, Previous RSI: 49.58, Oversold: 25
+2025-05-17 21:44:02,590 - INFO - RSI Buy Trigger: False
+2025-05-17 21:44:02,602 - INFO - T3: 2.3367, Previous T3: 2.3383
+2025-05-17 21:44:02,608 - INFO - T3 Signals: Long=False, Basic Long Condition=False, Cross=False
+2025-05-17 21:44:02,610 - INFO - Active orders: 0, Current price: 2.3245
+2025-05-17 21:44:02,610 - INFO - Price 2.3245 between grid levels 2.3110 and 2.3627
+2025-05-17 21:44:02,612 - INFO - No entry condition met (RSI or T3 signal not active)
+2025-05-17 21:59:04,486 - INFO - Fetched 109 candles, latest close: 2.3293
+2025-05-17 21:59:04,490 - INFO - RSI: 49.58, Previous RSI: 49.59, Oversold: 25
+2025-05-17 21:59:04,490 - INFO - RSI Buy Trigger: False
+2025-05-17 21:59:04,495 - INFO - T3: 2.3347, Previous T3: 2.3363
+2025-05-17 21:59:04,495 - INFO - T3 Signals: Long=False, Basic Long Condition=False, Cross=False
+2025-05-17 21:59:04,495 - INFO - Active orders: 0, Current price: 2.3293
+2025-05-17 21:59:04,496 - INFO - Price 2.3293 between grid levels 2.3110 and 2.3627
+2025-05-17 21:59:04,496 - INFO - No entry condition met (RSI or T3 signal not active)
+2025-05-17 22:14:04,755 - INFO - Fetched 109 candles, latest close: 2.3258
+2025-05-17 22:14:04,761 - INFO - RSI: 49.56, Previous RSI: 49.56, Oversold: 25
+2025-05-17 22:14:04,763 - INFO - RSI Buy Trigger: False
+2025-05-17 22:14:04,768 - INFO - T3: 2.3308, Previous T3: 2.3323
+2025-05-17 22:14:04,768 - INFO - T3 Signals: Long=False, Basic Long Condition=False, Cross=False
+2025-05-17 22:14:04,768 - INFO - Active orders: 0, Current price: 2.3258
+2025-05-17 22:14:04,771 - INFO - Price 2.3258 between grid levels 2.3110 and 2.3627
+2025-05-17 22:14:04,771 - INFO - No entry condition met (RSI or T3 signal not active)
+2025-05-17 22:29:05,012 - INFO - Fetched 109 candles, latest close: 2.3470
+2025-05-17 22:29:05,015 - INFO - RSI: 49.71, Previous RSI: 49.58, Oversold: 25
+2025-05-17 22:29:05,016 - INFO - RSI Buy Trigger: False
+2025-05-17 22:29:05,020 - INFO - T3: 2.3305, Previous T3: 2.3320
+2025-05-17 22:29:05,021 - INFO - T3 Signals: Long=False, Basic Long Condition=False, Cross=False
+2025-05-17 22:29:05,021 - INFO - Active orders: 0, Current price: 2.3470
+2025-05-17 22:29:05,021 - INFO - Price 2.3470 between grid levels 2.3110 and 2.3627
+2025-05-17 22:29:05,021 - INFO - No entry condition met (RSI or T3 signal not active)
+2025-05-17 22:44:05,587 - INFO - Fetched 109 candles, latest close: 2.3368
+2025-05-17 22:44:05,591 - INFO - RSI: 48.64, Previous RSI: 49.71, Oversold: 25
+2025-05-17 22:44:05,593 - INFO - RSI Buy Trigger: False
+2025-05-17 22:44:05,600 - INFO - T3: 2.3056, Previous T3: 2.3075
+2025-05-17 22:44:05,600 - INFO - T3 Signals: Long=False, Basic Long Condition=False, Cross=False
+2025-05-17 22:44:05,601 - INFO - Active orders: 0, Current price: 2.3368
+2025-05-17 22:44:05,601 - INFO - Price 2.3368 between grid levels 2.3110 and 2.3627
+2025-05-17 22:44:05,602 - INFO - No entry condition met (RSI or T3 signal not active)
+2025-05-17 22:59:06,195 - INFO - Fetched 109 candles, latest close: 2.2000
+2025-05-17 22:59:06,202 - INFO - RSI: 48.92, Previous RSI: 48.74, Oversold: 25
+2025-05-17 22:59:06,202 - INFO - RSI Buy Trigger: False
+2025-05-17 22:59:06,207 - INFO - T3: 2.3276, Previous T3: 2.3290
+2025-05-17 22:59:06,208 - INFO - T3 Signals: Long=False, Basic Long Condition=False, Cross=False
+2025-05-17 22:59:06,208 - INFO - Active orders: 0, Current price: 2.2000
+2025-05-17 22:59:06,208 - INFO - Price 2.2000 between grid levels 2.1559 and 2.2076
+2025-05-17 22:59:06,208 - INFO - No entry condition met (RSI or T3 signal not active)
+2025-05-17 23:14:06,757 - INFO - Fetched 109 candles, latest close: 2.3384
+2025-05-17 23:14:06,760 - INFO - RSI: 49.66, Previous RSI: 49.56, Oversold: 25
+2025-05-17 23:14:06,760 - INFO - RSI Buy Trigger: False
+2025-05-17 23:14:06,762 - INFO - T3: 2.3264, Previous T3: 2.3277
+2025-05-17 23:14:06,762 - INFO - T3 Signals: Long=False, Basic Long Condition=False, Cross=False
+2025-05-17 23:14:06,762 - INFO - Active orders: 0, Current price: 2.3384
+2025-05-17 23:14:06,762 - INFO - Price 2.3384 between grid levels 2.3110 and 2.3627
+2025-05-17 23:14:06,762 - INFO - No entry condition met (RSI or T3 signal not active)
+2025-05-17 23:29:07,045 - INFO - Fetched 109 candles, latest close: 2.4596
+2025-05-17 23:29:07,051 - INFO - RSI: 50.28, Previous RSI: 49.55, Oversold: 25
+2025-05-17 23:29:07,051 - INFO - RSI Buy Trigger: False
+2025-05-17 23:29:07,057 - INFO - T3: 2.3277, Previous T3: 2.3288
+2025-05-17 23:29:07,058 - INFO - T3 Signals: Long=False, Basic Long Condition=False, Cross=False
+2025-05-17 23:29:07,059 - INFO - Active orders: 0, Current price: 2.4596
+2025-05-17 23:29:07,059 - INFO - Price 2.4596 between grid levels 2.4144 and 2.4661
+2025-05-17 23:29:07,060 - INFO - No entry condition met (RSI or T3 signal not active)
+2025-05-17 23:44:07,685 - INFO - Fetched 109 candles, latest close: 2.3321
+2025-05-17 23:44:07,692 - INFO - RSI: 49.60, Previous RSI: 49.76, Oversold: 25
+2025-05-17 23:44:07,692 - INFO - RSI Buy Trigger: False
+2025-05-17 23:44:07,697 - INFO - T3: 2.3252, Previous T3: 2.3263
+2025-05-17 23:44:07,697 - INFO - T3 Signals: Long=False, Basic Long Condition=False, Cross=False
+2025-05-17 23:44:07,697 - INFO - Active orders: 0, Current price: 2.3321
+2025-05-17 23:44:07,697 - INFO - Price 2.3321 between grid levels 2.3110 and 2.3627
+2025-05-17 23:44:07,697 - INFO - No entry condition met (RSI or T3 signal not active)
+2025-05-17 23:59:08,297 - INFO - Fetched 109 candles, latest close: 2.3380
+2025-05-17 23:59:08,309 - INFO - RSI: 49.61, Previous RSI: 49.60, Oversold: 25
+2025-05-17 23:59:08,309 - INFO - RSI Buy Trigger: False
+2025-05-17 23:59:08,314 - INFO - T3: 2.3235, Previous T3: 2.3246
+2025-05-17 23:59:08,316 - INFO - T3 Signals: Long=False, Basic Long Condition=False, Cross=False
+2025-05-17 23:59:08,316 - INFO - Active orders: 0, Current price: 2.3380
+2025-05-17 23:59:08,319 - INFO - Price 2.3380 between grid levels 2.3110 and 2.3627
+2025-05-17 23:59:08,319 - INFO - No entry condition met (RSI or T3 signal not active)
+2025-05-18 00:14:08,905 - INFO - Fetched 109 candles, latest close: 2.1602
+2025-05-18 00:14:08,905 - INFO - RSI: 48.74, Previous RSI: 50.39, Oversold: 25
+2025-05-18 00:14:08,920 - INFO - RSI Buy Trigger: False
+2025-05-18 00:14:08,924 - INFO - T3: 2.3230, Previous T3: 2.3240
+2025-05-18 00:14:08,924 - INFO - T3 Signals: Long=False, Basic Long Condition=False, Cross=False
+2025-05-18 00:14:08,924 - INFO - Active orders: 0, Current price: 2.1602
+2025-05-18 00:14:08,924 - INFO - Price 2.1602 between grid levels 2.1559 and 2.2076
+2025-05-18 00:14:08,924 - INFO - No entry condition met (RSI or T3 signal not active)
+2025-05-18 00:29:09,248 - INFO - Fetched 109 candles, latest close: 2.1602
+2025-05-18 00:29:09,260 - INFO - RSI: 48.74, Previous RSI: 49.57, Oversold: 25
+2025-05-18 00:29:09,263 - INFO - RSI Buy Trigger: False
+2025-05-18 00:29:09,274 - INFO - T3: 2.3219, Previous T3: 2.3229
+2025-05-18 00:29:09,281 - INFO - T3 Signals: Long=False, Basic Long Condition=False, Cross=False
+2025-05-18 00:29:09,282 - INFO - Active orders: 0, Current price: 2.1602
+2025-05-18 00:29:09,285 - INFO - Price 2.1602 between grid levels 2.1559 and 2.2076
+2025-05-18 00:29:09,286 - INFO - No entry condition met (RSI or T3 signal not active)
+2025-05-18 00:44:09,577 - INFO - Fetched 109 candles, latest close: 2.3408
+2025-05-18 00:44:09,579 - INFO - RSI: 49.61, Previous RSI: 49.62, Oversold: 25
+2025-05-18 00:44:09,579 - INFO - RSI Buy Trigger: False
+2025-05-18 00:44:09,589 - INFO - T3: 2.3220, Previous T3: 2.3229
+2025-05-18 00:44:09,591 - INFO - T3 Signals: Long=False, Basic Long Condition=False, Cross=False
+2025-05-18 00:44:09,591 - INFO - Active orders: 0, Current price: 2.3408
+2025-05-18 00:44:09,591 - INFO - Price 2.3408 between grid levels 2.3110 and 2.3627
+2025-05-18 00:44:09,591 - INFO - No entry condition met (RSI or T3 signal not active)
+2025-05-18 00:59:10,192 - INFO - Fetched 109 candles, latest close: 2.3704
+2025-05-18 00:59:10,206 - INFO - RSI: 49.75, Previous RSI: 49.63, Oversold: 25
+2025-05-18 00:59:10,206 - INFO - RSI Buy Trigger: False
+2025-05-18 00:59:10,215 - INFO - T3: 2.2953, Previous T3: 2.2967
+2025-05-18 00:59:10,215 - INFO - T3 Signals: Long=False, Basic Long Condition=False, Cross=False
+2025-05-18 00:59:10,215 - INFO - Active orders: 0, Current price: 2.3704
+2025-05-18 00:59:10,215 - INFO - Price 2.3704 between grid levels 2.3627 and 2.4144
+2025-05-18 00:59:10,226 - INFO - No entry condition met (RSI or T3 signal not active)
+2025-05-18 09:34:46,417 - INFO - Fetched 109 candles, latest close: 2.3743
+2025-05-18 09:34:46,485 - INFO - RSI: 50.01, Previous RSI: 49.99, Oversold: 25
+2025-05-18 09:34:46,487 - INFO - RSI Buy Trigger: False
+2025-05-18 09:34:46,499 - INFO - T3: 2.3576, Previous T3: 2.3563
+2025-05-18 09:34:46,500 - INFO - T3 Signals: Long=True, Basic Long Condition=True, Cross=True
+2025-05-18 09:34:46,503 - INFO - Active orders: 0, Current price: 2.3743
+2025-05-18 09:34:46,507 - INFO - Price 2.3743 between grid levels 2.3627 and 2.4144
+2025-05-18 09:34:46,507 - INFO - Entry condition met, checking grid levels
+2025-05-18 09:34:47,152 - ERROR - Failed to place buy order at grid 38: binance {"code":-4164,"msg":"Order's notional must be no smaller than 5 (unless you choose reduce only)."}
+2025-05-18 09:34:47,663 - ERROR - Failed to place buy order at grid 39: binance {"code":-4164,"msg":"Order's notional must be no smaller than 5 (unless you choose reduce only)."}
+2025-05-18 09:34:47,839 - ERROR - Failed to place buy order at grid 40: binance {"code":-4164,"msg":"Order's notional must be no smaller than 5 (unless you choose reduce only)."}
+2025-05-18 09:34:48,367 - ERROR - Failed to place buy order at grid 41: binance {"code":-4164,"msg":"Order's notional must be no smaller than 5 (unless you choose reduce only)."}
+2025-05-18 09:34:48,876 - ERROR - Failed to place buy order at grid 42: binance {"code":-4164,"msg":"Order's notional must be no smaller than 5 (unless you choose reduce only)."}
+2025-05-18 09:34:49,374 - ERROR - Failed to place buy order at grid 43: binance {"code":-4164,"msg":"Order's notional must be no smaller than 5 (unless you choose reduce only)."}
+2025-05-18 09:34:49,587 - ERROR - Failed to place buy order at grid 44: binance {"code":-4164,"msg":"Order's notional must be no smaller than 5 (unless you choose reduce only)."}
+2025-05-18 09:34:50,116 - ERROR - Failed to place buy order at grid 45: binance {"code":-4164,"msg":"Order's notional must be no smaller than 5 (unless you choose reduce only)."}
+2025-05-18 09:34:50,304 - ERROR - Failed to place buy order at grid 46: binance {"code":-4164,"msg":"Order's notional must be no smaller than 5 (unless you choose reduce only)."}
+2025-05-18 09:34:50,608 - ERROR - Failed to place buy order at grid 47: binance {"code":-4164,"msg":"Order's notional must be no smaller than 5 (unless you choose reduce only)."}
+2025-05-18 09:34:50,788 - ERROR - Failed to place buy order at grid 48: binance {"code":-4164,"msg":"Order's notional must be no smaller than 5 (unless you choose reduce only)."}
+2025-05-18 09:34:51,331 - ERROR - Failed to place buy order at grid 49: binance {"code":-4164,"msg":"Order's notional must be no smaller than 5 (unless you choose reduce only)."}
+2025-05-18 09:34:51,510 - ERROR - Failed to place buy order at grid 50: binance {"code":-4164,"msg":"Order's notional must be no smaller than 5 (unless you choose reduce only)."}
+2025-05-18 09:34:51,711 - ERROR - Failed to place buy order at grid 51: binance {"code":-4164,"msg":"Order's notional must be no smaller than 5 (unless you choose reduce only)."}
+2025-05-18 09:34:51,916 - ERROR - Failed to place buy order at grid 52: binance {"code":-4164,"msg":"Order's notional must be no smaller than 5 (unless you choose reduce only)."}
+2025-05-18 09:34:52,120 - ERROR - Failed to place buy order at grid 53: binance {"code":-4164,"msg":"Order's notional must be no smaller than 5 (unless you choose reduce only)."}
+2025-05-18 09:34:52,320 - ERROR - Failed to place buy order at grid 54: binance {"code":-4164,"msg":"Order's notional must be no smaller than 5 (unless you choose reduce only)."}
+2025-05-18 09:34:52,518 - ERROR - Failed to place buy order at grid 55: binance {"code":-4164,"msg":"Order's notional must be no smaller than 5 (unless you choose reduce only)."}
+2025-05-18 09:34:52,723 - ERROR - Failed to place buy order at grid 56: binance {"code":-4164,"msg":"Order's notional must be no smaller than 5 (unless you choose reduce only)."}
+2025-05-18 09:34:53,253 - ERROR - Failed to place buy order at grid 57: binance {"code":-4164,"msg":"Order's notional must be no smaller than 5 (unless you choose reduce only)."}
+2025-05-18 09:34:53,765 - ERROR - Failed to place buy order at grid 58: binance {"code":-4164,"msg":"Order's notional must be no smaller than 5 (unless you choose reduce only)."}
+2025-05-18 09:34:53,951 - ERROR - Failed to place buy order at grid 59: binance {"code":-4164,"msg":"Order's notional must be no smaller than 5 (unless you choose reduce only)."}
+2025-05-18 10:30:36,902 - INFO - Starting Grid Bot...
+2025-05-18 10:30:40,686 - INFO - Fetched 109 candles, latest close: 2.3809
+2025-05-18 10:30:40,706 - INFO - RSI: 50.94, Previous RSI: 50.94, Oversold: 25
+2025-05-18 10:30:40,718 - INFO - RSI Buy Trigger: False
+2025-05-18 10:30:40,728 - INFO - T3: 2.3307, Previous T3: 2.3302
+2025-05-18 10:30:40,750 - INFO - T3 Signals: Long=True, Basic Long Condition=True, Cross=True
+2025-05-18 10:30:40,760 - INFO - Active orders: 0, Current price: 2.3809
+2025-05-18 10:30:40,791 - INFO - Price 2.3809 between grid levels 2.3796 and 2.4418
+2025-05-18 10:30:40,806 - INFO - Entry condition met, checking grid levels
+2025-05-18 10:30:41,020 - INFO - Buy order placed at grid level 32: 2.4418, Qty: 2.5715, Notional: 6.12, Time: 2025-05-18 10:30:41.020763
+2025-05-18 10:30:41,230 - INFO - Buy order placed at grid level 33: 2.5041, Qty: 2.5715, Notional: 6.12, Time: 2025-05-18 10:30:41.230093
+2025-05-18 10:30:41,419 - INFO - Buy order placed at grid level 34: 2.5663, Qty: 2.5715, Notional: 6.12, Time: 2025-05-18 10:30:41.419077
+2025-05-18 10:30:41,617 - INFO - Buy order placed at grid level 35: 2.6286, Qty: 2.5715, Notional: 6.12, Time: 2025-05-18 10:30:41.617637
+2025-05-18 10:30:42,145 - INFO - Buy order placed at grid level 36: 2.6908, Qty: 2.5715, Notional: 6.12, Time: 2025-05-18 10:30:42.145170
+2025-05-18 10:30:42,326 - INFO - Buy order placed at grid level 37: 2.7531, Qty: 2.5715, Notional: 6.12, Time: 2025-05-18 10:30:42.326513
+2025-05-18 10:30:42,870 - INFO - Buy order placed at grid level 38: 2.8153, Qty: 2.5715, Notional: 6.12, Time: 2025-05-18 10:30:42.870961
+2025-05-18 10:30:43,054 - INFO - Buy order placed at grid level 39: 2.8776, Qty: 2.5715, Notional: 6.12, Time: 2025-05-18 10:30:43.054823
+2025-05-18 10:30:43,583 - INFO - Buy order placed at grid level 40: 2.9398, Qty: 2.5715, Notional: 6.12, Time: 2025-05-18 10:30:43.583443
+2025-05-18 10:30:43,763 - INFO - Buy order placed at grid level 41: 3.0020, Qty: 2.5715, Notional: 6.12, Time: 2025-05-18 10:30:43.763515
+2025-05-18 10:30:43,963 - INFO - Buy order placed at grid level 42: 3.0643, Qty: 2.5715, Notional: 6.12, Time: 2025-05-18 10:30:43.963141
+2025-05-18 10:30:44,553 - INFO - Buy order placed at grid level 43: 3.1265, Qty: 2.5715, Notional: 6.12, Time: 2025-05-18 10:30:44.553344
+2025-05-18 10:30:45,058 - INFO - Buy order placed at grid level 44: 3.1888, Qty: 2.5715, Notional: 6.12, Time: 2025-05-18 10:30:45.054555
+2025-05-18 10:30:45,238 - INFO - Buy order placed at grid level 45: 3.2510, Qty: 2.5715, Notional: 6.12, Time: 2025-05-18 10:30:45.238601
+2025-05-18 10:30:45,449 - INFO - Buy order placed at grid level 46: 3.3133, Qty: 2.5715, Notional: 6.12, Time: 2025-05-18 10:30:45.449797
+2025-05-18 10:30:45,641 - INFO - Buy order placed at grid level 47: 3.3755, Qty: 2.5715, Notional: 6.12, Time: 2025-05-18 10:30:45.641130
+2025-05-18 10:30:46,182 - INFO - Buy order placed at grid level 48: 3.4378, Qty: 2.5715, Notional: 6.12, Time: 2025-05-18 10:30:46.182762
+2025-05-18 10:30:46,370 - INFO - Buy order placed at grid level 49: 3.5000, Qty: 2.5715, Notional: 6.12, Time: 2025-05-18 10:30:46.370039
+2025-05-18 10:45:47,047 - INFO - Fetched 109 candles, latest close: 2.3746
+2025-05-18 10:45:47,104 - INFO - RSI: 50.91, Previous RSI: 50.94, Oversold: 25
+2025-05-18 10:45:47,106 - INFO - RSI Buy Trigger: False
+2025-05-18 10:45:47,121 - INFO - T3: 2.3311, Previous T3: 2.3307
+2025-05-18 10:45:47,123 - INFO - T3 Signals: Long=False, Basic Long Condition=True, Cross=False
+2025-05-18 10:45:47,127 - INFO - Active orders: 18, Current price: 2.3746
+2025-05-18 10:45:47,131 - INFO - Price 2.3746 between grid levels 2.3173 and 2.3796
+2025-05-18 10:45:47,133 - INFO - No entry condition met (RSI or T3 signal not active)
+2025-05-18 11:00:47,444 - INFO - Fetched 109 candles, latest close: 2.2200
+2025-05-18 11:00:47,463 - INFO - RSI: 49.24, Previous RSI: 49.22, Oversold: 25
+2025-05-18 11:00:47,467 - INFO - RSI Buy Trigger: False
+2025-05-18 11:00:47,479 - INFO - T3: 2.3320, Previous T3: 2.3316
+2025-05-18 11:00:47,479 - INFO - T3 Signals: Long=False, Basic Long Condition=False, Cross=False
+2025-05-18 11:00:47,481 - INFO - Active orders: 18, Current price: 2.2200
+2025-05-18 11:00:47,483 - INFO - Price 2.2200 between grid levels 2.1929 and 2.2551
+2025-05-18 11:00:47,483 - INFO - No entry condition met (RSI or T3 signal not active)
+2025-05-18 11:15:48,252 - INFO - Fetched 109 candles, latest close: 2.3885
+2025-05-18 11:15:48,287 - INFO - RSI: 50.12, Previous RSI: 49.22, Oversold: 25
+2025-05-18 11:15:48,289 - INFO - RSI Buy Trigger: False
+2025-05-18 11:15:48,295 - INFO - T3: 2.3320, Previous T3: 2.3316
+2025-05-18 11:15:48,297 - INFO - T3 Signals: Long=True, Basic Long Condition=True, Cross=True
+2025-05-18 11:15:48,299 - INFO - Active orders: 18, Current price: 2.3885
+2025-05-18 11:15:48,299 - INFO - Price 2.3885 between grid levels 2.3796 and 2.4418
+2025-05-18 11:15:48,299 - INFO - Entry condition met, checking grid levels
+2025-05-18 11:30:48,570 - INFO - Fetched 109 candles, latest close: 2.3921
+2025-05-18 11:30:48,575 - INFO - RSI: 49.03, Previous RSI: 50.12, Oversold: 25
+2025-05-18 11:30:48,576 - INFO - RSI Buy Trigger: False
+2025-05-18 11:30:48,580 - INFO - T3: 2.3324, Previous T3: 2.3320
+2025-05-18 11:30:48,581 - INFO - T3 Signals: Long=False, Basic Long Condition=True, Cross=False
+2025-05-18 11:30:48,581 - INFO - Active orders: 18, Current price: 2.3921
+2025-05-18 11:30:48,582 - INFO - Price 2.3921 between grid levels 2.3796 and 2.4418
+2025-05-18 11:30:48,582 - INFO - No entry condition met (RSI or T3 signal not active)
+2025-05-18 11:45:49,176 - INFO - Fetched 109 candles, latest close: 2.3700
+2025-05-18 11:45:49,181 - INFO - RSI: 49.99, Previous RSI: 48.82, Oversold: 25
+2025-05-18 11:45:49,181 - INFO - RSI Buy Trigger: False
+2025-05-18 11:45:49,184 - INFO - T3: 2.3292, Previous T3: 2.3289
+2025-05-18 11:45:49,184 - INFO - T3 Signals: Long=False, Basic Long Condition=True, Cross=False
+2025-05-18 11:45:49,184 - INFO - Active orders: 18, Current price: 2.3700
+2025-05-18 11:45:49,186 - INFO - Price 2.3700 between grid levels 2.3173 and 2.3796
+2025-05-18 11:45:49,186 - INFO - No entry condition met (RSI or T3 signal not active)
+2025-05-18 12:00:51,571 - INFO - Fetched 109 candles, latest close: 2.3937
+2025-05-18 12:00:51,576 - INFO - RSI: 50.08, Previous RSI: 49.99, Oversold: 25
+2025-05-18 12:00:51,576 - INFO - RSI Buy Trigger: False
+2025-05-18 12:00:51,578 - INFO - T3: 2.3302, Previous T3: 2.3299
+2025-05-18 12:00:51,579 - INFO - T3 Signals: Long=False, Basic Long Condition=True, Cross=False
+2025-05-18 12:00:51,579 - INFO - Active orders: 18, Current price: 2.3937
+2025-05-18 12:00:51,579 - INFO - Price 2.3937 between grid levels 2.3796 and 2.4418
+2025-05-18 12:00:51,579 - INFO - No entry condition met (RSI or T3 signal not active)
+2025-05-18 12:15:52,293 - INFO - Fetched 109 candles, latest close: 2.3881
+2025-05-18 12:15:52,328 - INFO - RSI: 50.01, Previous RSI: 50.08, Oversold: 25
+2025-05-18 12:15:52,328 - INFO - RSI Buy Trigger: False
+2025-05-18 12:15:52,332 - INFO - T3: 2.3306, Previous T3: 2.3302
+2025-05-18 12:15:52,334 - INFO - T3 Signals: Long=False, Basic Long Condition=True, Cross=False
+2025-05-18 12:15:52,334 - INFO - Active orders: 18, Current price: 2.3881
+2025-05-18 12:15:52,334 - INFO - Price 2.3881 between grid levels 2.3796 and 2.4418
+2025-05-18 12:15:52,336 - INFO - No entry condition met (RSI or T3 signal not active)
+2025-05-18 12:30:52,740 - INFO - Fetched 109 candles, latest close: 2.4021
+2025-05-18 12:30:52,764 - INFO - RSI: 49.06, Previous RSI: 50.01, Oversold: 25
+2025-05-18 12:30:52,764 - INFO - RSI Buy Trigger: False
+2025-05-18 12:30:52,772 - INFO - T3: 2.3538, Previous T3: 2.3529
+2025-05-18 12:30:52,772 - INFO - T3 Signals: Long=False, Basic Long Condition=True, Cross=False
+2025-05-18 12:30:52,775 - INFO - Active orders: 18, Current price: 2.4021
+2025-05-18 12:30:52,776 - INFO - Price 2.4021 between grid levels 2.3796 and 2.4418
+2025-05-18 12:30:52,778 - INFO - No entry condition met (RSI or T3 signal not active)
+2025-05-18 12:45:53,444 - INFO - Fetched 109 candles, latest close: 2.4538
+2025-05-18 12:45:53,464 - INFO - RSI: 50.75, Previous RSI: 49.06, Oversold: 25
+2025-05-18 12:45:53,466 - INFO - RSI Buy Trigger: False
+2025-05-18 12:45:53,473 - INFO - T3: 2.3546, Previous T3: 2.3538
+2025-05-18 12:45:53,475 - INFO - T3 Signals: Long=False, Basic Long Condition=True, Cross=False
+2025-05-18 12:45:53,478 - INFO - Active orders: 18, Current price: 2.4538
+2025-05-18 12:45:53,480 - INFO - Price 2.4538 between grid levels 2.4418 and 2.5041
+2025-05-18 12:45:53,480 - INFO - No entry condition met (RSI or T3 signal not active)
+2025-05-18 13:00:53,786 - INFO - Fetched 109 candles, latest close: 2.1850
+2025-05-18 13:00:53,810 - INFO - RSI: 50.29, Previous RSI: 49.62, Oversold: 25
+2025-05-18 13:00:53,813 - INFO - RSI Buy Trigger: False
+2025-05-18 13:00:53,826 - INFO - T3: 2.3336, Previous T3: 2.3334
+2025-05-18 13:00:53,832 - INFO - T3 Signals: Long=False, Basic Long Condition=False, Cross=False
+2025-05-18 13:00:53,834 - INFO - Active orders: 18, Current price: 2.1850
+2025-05-18 13:00:53,837 - INFO - Price 2.1850 between grid levels 2.1306 and 2.1929
+2025-05-18 13:00:53,839 - INFO - No entry condition met (RSI or T3 signal not active)
+2025-05-18 13:15:54,428 - INFO - Fetched 109 candles, latest close: 2.1850
+2025-05-18 13:15:54,433 - INFO - RSI: 50.14, Previous RSI: 50.29, Oversold: 25
+2025-05-18 13:15:54,433 - INFO - RSI Buy Trigger: False
+2025-05-18 13:15:54,437 - INFO - T3: 2.3344, Previous T3: 2.3341
+2025-05-18 13:15:54,438 - INFO - T3 Signals: Long=False, Basic Long Condition=False, Cross=False
+2025-05-18 13:15:54,439 - INFO - Active orders: 18, Current price: 2.1850
+2025-05-18 13:15:54,439 - INFO - Price 2.1850 between grid levels 2.1306 and 2.1929
+2025-05-18 13:15:54,440 - INFO - No entry condition met (RSI or T3 signal not active)
+2025-05-18 13:30:54,688 - INFO - Fetched 109 candles, latest close: 2.3923
+2025-05-18 13:30:54,692 - INFO - RSI: 51.25, Previous RSI: 50.29, Oversold: 25
+2025-05-18 13:30:54,693 - INFO - RSI Buy Trigger: False
+2025-05-18 13:30:54,696 - INFO - T3: 2.3344, Previous T3: 2.3341
+2025-05-18 13:30:54,697 - INFO - T3 Signals: Long=True, Basic Long Condition=True, Cross=True
+2025-05-18 13:30:54,698 - INFO - Active orders: 18, Current price: 2.3923
+2025-05-18 13:30:54,698 - INFO - Price 2.3923 between grid levels 2.3796 and 2.4418
+2025-05-18 13:30:54,699 - INFO - Entry condition met, checking grid levels
+2025-05-18 13:45:54,954 - INFO - Fetched 109 candles, latest close: 2.3750
+2025-05-18 13:45:54,963 - INFO - RSI: 50.23, Previous RSI: 50.17, Oversold: 25
+2025-05-18 13:45:54,964 - INFO - RSI Buy Trigger: False
+2025-05-18 13:45:54,973 - INFO - T3: 2.3064, Previous T3: 2.3068
+2025-05-18 13:45:54,975 - INFO - T3 Signals: Long=False, Basic Long Condition=False, Cross=False
+2025-05-18 13:45:54,976 - INFO - Active orders: 18, Current price: 2.3750
+2025-05-18 13:45:54,977 - INFO - Price 2.3750 between grid levels 2.3173 and 2.3796
+2025-05-18 13:45:54,978 - INFO - No entry condition met (RSI or T3 signal not active)
+2025-05-18 14:00:55,620 - INFO - Fetched 109 candles, latest close: 2.1606
+2025-05-18 14:00:55,626 - INFO - RSI: 48.82, Previous RSI: 50.23, Oversold: 25
+2025-05-18 14:00:55,627 - INFO - RSI Buy Trigger: False
+2025-05-18 14:00:55,633 - INFO - T3: 2.3332, Previous T3: 2.3330
+2025-05-18 14:00:55,634 - INFO - T3 Signals: Long=False, Basic Long Condition=False, Cross=False
+2025-05-18 14:00:55,635 - INFO - Active orders: 18, Current price: 2.1606
+2025-05-18 14:00:55,636 - INFO - Price 2.1606 between grid levels 2.1306 and 2.1929
+2025-05-18 14:00:55,637 - INFO - No entry condition met (RSI or T3 signal not active)
+2025-05-18 14:15:55,905 - INFO - Fetched 109 candles, latest close: 2.1800
+2025-05-18 14:15:55,911 - INFO - RSI: 47.67, Previous RSI: 50.15, Oversold: 25
+2025-05-18 14:15:55,911 - INFO - RSI Buy Trigger: False
+2025-05-18 14:15:55,916 - INFO - T3: 2.3314, Previous T3: 2.3314
+2025-05-18 14:15:55,917 - INFO - T3 Signals: Long=False, Basic Long Condition=False, Cross=False
+2025-05-18 14:15:55,918 - INFO - Active orders: 18, Current price: 2.1800
+2025-05-18 14:15:55,919 - INFO - Price 2.1800 between grid levels 2.1306 and 2.1929
+2025-05-18 14:15:55,919 - INFO - No entry condition met (RSI or T3 signal not active)
+2025-05-18 14:30:56,224 - INFO - Fetched 109 candles, latest close: 2.1900
+2025-05-18 14:30:56,242 - INFO - RSI: 50.22, Previous RSI: 47.73, Oversold: 25
+2025-05-18 14:30:56,245 - INFO - RSI Buy Trigger: False
+2025-05-18 14:30:56,254 - INFO - T3: 2.3061, Previous T3: 2.3067
+2025-05-18 14:30:56,257 - INFO - T3 Signals: Long=False, Basic Long Condition=False, Cross=False
+2025-05-18 14:30:56,257 - INFO - Active orders: 18, Current price: 2.1900
+2025-05-18 14:30:56,257 - INFO - Price 2.1900 between grid levels 2.1306 and 2.1929
+2025-05-18 14:30:56,257 - INFO - No entry condition met (RSI or T3 signal not active)
+2025-05-18 14:45:56,872 - INFO - Fetched 109 candles, latest close: 2.1606
+2025-05-18 14:45:56,878 - INFO - RSI: 50.04, Previous RSI: 47.73, Oversold: 25
+2025-05-18 14:45:56,878 - INFO - RSI Buy Trigger: False
+2025-05-18 14:45:56,885 - INFO - T3: 2.3061, Previous T3: 2.3067
+2025-05-18 14:45:56,893 - INFO - T3 Signals: Long=False, Basic Long Condition=False, Cross=False
+2025-05-18 14:45:56,893 - INFO - Active orders: 18, Current price: 2.1606
+2025-05-18 14:45:56,897 - INFO - Price 2.1606 between grid levels 2.1306 and 2.1929
+2025-05-18 14:45:56,897 - INFO - No entry condition met (RSI or T3 signal not active)
+2025-05-18 15:00:57,179 - INFO - Fetched 109 candles, latest close: 2.1606
+2025-05-18 15:00:57,184 - INFO - RSI: 50.04, Previous RSI: 50.04, Oversold: 25
+2025-05-18 15:00:57,184 - INFO - RSI Buy Trigger: False
+2025-05-18 15:00:57,196 - INFO - T3: 2.3399, Previous T3: 2.3398
+2025-05-18 15:00:57,197 - INFO - T3 Signals: Long=False, Basic Long Condition=False, Cross=False
+2025-05-18 15:00:57,197 - INFO - Active orders: 18, Current price: 2.1606
+2025-05-18 15:00:57,197 - INFO - Price 2.1606 between grid levels 2.1306 and 2.1929
+2025-05-18 15:00:57,199 - INFO - No entry condition met (RSI or T3 signal not active)
+2025-05-18 15:15:57,899 - INFO - Fetched 109 candles, latest close: 2.1606
+2025-05-18 15:15:57,925 - INFO - RSI: 48.50, Previous RSI: 50.04, Oversold: 25
+2025-05-18 15:15:57,926 - INFO - RSI Buy Trigger: False
+2025-05-18 15:15:57,931 - INFO - T3: 2.3483, Previous T3: 2.3481
+2025-05-18 15:15:57,931 - INFO - T3 Signals: Long=False, Basic Long Condition=False, Cross=False
+2025-05-18 15:15:57,931 - INFO - Active orders: 18, Current price: 2.1606
+2025-05-18 15:15:57,934 - INFO - Price 2.1606 between grid levels 2.1306 and 2.1929
+2025-05-18 15:15:57,934 - INFO - No entry condition met (RSI or T3 signal not active)
+2025-05-18 15:30:58,412 - INFO - Fetched 109 candles, latest close: 2.1606
+2025-05-18 15:30:58,418 - INFO - RSI: 48.74, Previous RSI: 48.50, Oversold: 25
+2025-05-18 15:30:58,420 - INFO - RSI Buy Trigger: False
+2025-05-18 15:30:58,430 - INFO - T3: 2.3648, Previous T3: 2.3644
+2025-05-18 15:30:58,432 - INFO - T3 Signals: Long=False, Basic Long Condition=False, Cross=False
+2025-05-18 15:30:58,432 - INFO - Active orders: 18, Current price: 2.1606
+2025-05-18 15:30:58,434 - INFO - Price 2.1606 between grid levels 2.1306 and 2.1929
+2025-05-18 15:30:58,434 - INFO - No entry condition met (RSI or T3 signal not active)
+2025-05-18 15:45:58,862 - INFO - Fetched 109 candles, latest close: 2.1606
+2025-05-18 15:45:58,881 - INFO - RSI: 50.05, Previous RSI: 48.74, Oversold: 25
+2025-05-18 15:45:58,881 - INFO - RSI Buy Trigger: False
+2025-05-18 15:45:58,890 - INFO - T3: 2.3613, Previous T3: 2.3612
+2025-05-18 15:45:58,890 - INFO - T3 Signals: Long=False, Basic Long Condition=False, Cross=False
+2025-05-18 15:45:58,891 - INFO - Active orders: 18, Current price: 2.1606
+2025-05-18 15:45:58,893 - INFO - Price 2.1606 between grid levels 2.1306 and 2.1929
+2025-05-18 15:45:58,893 - INFO - No entry condition met (RSI or T3 signal not active)
+2025-05-18 16:01:00,097 - INFO - Fetched 109 candles, latest close: 2.1606
+2025-05-18 16:01:00,120 - INFO - RSI: 48.64, Previous RSI: 50.05, Oversold: 25
+2025-05-18 16:01:00,122 - INFO - RSI Buy Trigger: False
+2025-05-18 16:01:00,129 - INFO - T3: 2.3382, Previous T3: 2.3387
+2025-05-18 16:01:00,129 - INFO - T3 Signals: Long=False, Basic Long Condition=False, Cross=False
+2025-05-18 16:01:00,131 - INFO - Active orders: 18, Current price: 2.1606
+2025-05-18 16:01:00,131 - INFO - Price 2.1606 between grid levels 2.1306 and 2.1929
+2025-05-18 16:01:00,133 - INFO - No entry condition met (RSI or T3 signal not active)
+2025-05-18 16:16:00,810 - INFO - Fetched 109 candles, latest close: 2.3900
+2025-05-18 16:16:00,821 - INFO - RSI: 51.55, Previous RSI: 50.10, Oversold: 25
+2025-05-18 16:16:00,822 - INFO - RSI Buy Trigger: False
+2025-05-18 16:16:00,826 - INFO - T3: 2.3607, Previous T3: 2.3609
+2025-05-18 16:16:00,827 - INFO - T3 Signals: Long=False, Basic Long Condition=False, Cross=False
+2025-05-18 16:16:00,827 - INFO - Active orders: 18, Current price: 2.3900
+2025-05-18 16:16:00,828 - INFO - Price 2.3900 between grid levels 2.3796 and 2.4418
+2025-05-18 16:16:00,828 - INFO - No entry condition met (RSI or T3 signal not active)
+2025-05-18 16:31:01,524 - INFO - Fetched 109 candles, latest close: 2.3800
+2025-05-18 16:31:01,543 - INFO - RSI: 51.48, Previous RSI: 50.10, Oversold: 25
+2025-05-18 16:31:01,543 - INFO - RSI Buy Trigger: False
+2025-05-18 16:31:01,548 - INFO - T3: 2.3607, Previous T3: 2.3609
+2025-05-18 16:31:01,548 - INFO - T3 Signals: Long=False, Basic Long Condition=False, Cross=False
+2025-05-18 16:31:01,548 - INFO - Active orders: 18, Current price: 2.3800
+2025-05-18 16:31:01,548 - INFO - Price 2.3800 between grid levels 2.3796 and 2.4418
+2025-05-18 16:31:01,551 - INFO - No entry condition met (RSI or T3 signal not active)
+2025-05-18 16:46:02,400 - INFO - Fetched 109 candles, latest close: 2.1700
+2025-05-18 16:46:02,438 - INFO - RSI: 48.74, Previous RSI: 48.76, Oversold: 25
+2025-05-18 16:46:02,438 - INFO - RSI Buy Trigger: False
+2025-05-18 16:46:02,442 - INFO - T3: 2.3588, Previous T3: 2.3591
+2025-05-18 16:46:02,442 - INFO - T3 Signals: Long=False, Basic Long Condition=False, Cross=False
+2025-05-18 16:46:02,442 - INFO - Active orders: 18, Current price: 2.1700
+2025-05-18 16:46:02,444 - INFO - Price 2.1700 between grid levels 2.1306 and 2.1929
+2025-05-18 16:46:02,444 - INFO - No entry condition met (RSI or T3 signal not active)
+2025-05-18 17:01:03,303 - INFO - Fetched 109 candles, latest close: 2.1606
+2025-05-18 17:01:03,349 - INFO - RSI: 48.68, Previous RSI: 48.76, Oversold: 25
+2025-05-18 17:01:03,350 - INFO - RSI Buy Trigger: False
+2025-05-18 17:01:03,354 - INFO - T3: 2.3588, Previous T3: 2.3591
+2025-05-18 17:01:03,358 - INFO - T3 Signals: Long=False, Basic Long Condition=False, Cross=False
+2025-05-18 17:01:03,358 - INFO - Active orders: 18, Current price: 2.1606
+2025-05-18 17:01:03,358 - INFO - Price 2.1606 between grid levels 2.1306 and 2.1929
+2025-05-18 17:01:03,358 - INFO - No entry condition met (RSI or T3 signal not active)
+2025-05-18 17:16:03,662 - INFO - Fetched 109 candles, latest close: 2.4520
+2025-05-18 17:16:03,677 - INFO - RSI: 52.11, Previous RSI: 48.68, Oversold: 25
+2025-05-18 17:16:03,677 - INFO - RSI Buy Trigger: False
+2025-05-18 17:16:03,683 - INFO - T3: 2.3583, Previous T3: 2.3588
+2025-05-18 17:16:03,683 - INFO - T3 Signals: Long=False, Basic Long Condition=False, Cross=False
+2025-05-18 17:16:03,683 - INFO - Active orders: 18, Current price: 2.4520
+2025-05-18 17:16:03,685 - INFO - Price 2.4520 between grid levels 2.4418 and 2.5041
+2025-05-18 17:16:03,685 - INFO - No entry condition met (RSI or T3 signal not active)
+2025-05-18 17:31:13,884 - ERROR - Error fetching OHLCV: binance GET https://testnet.binancefuture.com/fapi/v1/klines?interval=15m&limit=109&symbol=XRPUSDT
+2025-05-18 17:31:13,916 - WARNING - Insufficient data: 0 candles fetched
+2025-05-18 17:32:15,029 - INFO - Fetched 109 candles, latest close: 2.1700
+2025-05-18 17:32:15,127 - INFO - RSI: 48.91, Previous RSI: 48.88, Oversold: 25
+2025-05-18 17:32:15,134 - INFO - RSI Buy Trigger: False
+2025-05-18 17:32:15,163 - INFO - T3: 2.3287, Previous T3: 2.3299
+2025-05-18 17:32:15,167 - INFO - T3 Signals: Long=False, Basic Long Condition=False, Cross=False
+2025-05-18 17:32:15,178 - INFO - Active orders: 18, Current price: 2.1700
+2025-05-18 17:32:15,191 - INFO - Price 2.1700 between grid levels 2.1306 and 2.1929
+2025-05-18 17:32:15,199 - INFO - No entry condition met (RSI or T3 signal not active)
+2025-05-18 17:47:15,535 - INFO - Fetched 109 candles, latest close: 2.3966
+2025-05-18 17:47:15,552 - INFO - RSI: 51.53, Previous RSI: 50.39, Oversold: 25
+2025-05-18 17:47:15,554 - INFO - RSI Buy Trigger: False
+2025-05-18 17:47:15,566 - INFO - T3: 2.3552, Previous T3: 2.3558
+2025-05-18 17:47:15,568 - INFO - T3 Signals: Long=False, Basic Long Condition=False, Cross=False
+2025-05-18 17:47:15,568 - INFO - Active orders: 18, Current price: 2.3966
+2025-05-18 17:47:15,571 - INFO - Price 2.3966 between grid levels 2.3796 and 2.4418
+2025-05-18 17:47:15,573 - INFO - No entry condition met (RSI or T3 signal not active)
+2025-05-18 18:02:16,334 - INFO - Fetched 109 candles, latest close: 2.1703
+2025-05-18 18:02:16,371 - INFO - RSI: 47.50, Previous RSI: 51.47, Oversold: 25
+2025-05-18 18:02:16,386 - INFO - RSI Buy Trigger: False
+2025-05-18 18:02:16,415 - INFO - T3: 2.3263, Previous T3: 2.3276
+2025-05-18 18:02:16,418 - INFO - T3 Signals: Long=False, Basic Long Condition=False, Cross=False
+2025-05-18 18:02:16,431 - INFO - Active orders: 18, Current price: 2.1703
+2025-05-18 18:02:16,435 - INFO - Price 2.1703 between grid levels 2.1306 and 2.1929
+2025-05-18 18:02:16,451 - INFO - No entry condition met (RSI or T3 signal not active)
+2025-05-18 18:17:17,146 - INFO - Fetched 109 candles, latest close: 2.3800
+2025-05-18 18:17:17,156 - INFO - RSI: 51.72, Previous RSI: 48.88, Oversold: 25
+2025-05-18 18:17:17,156 - INFO - RSI Buy Trigger: False
+2025-05-18 18:17:17,160 - INFO - T3: 2.3528, Previous T3: 2.3535
+2025-05-18 18:17:17,163 - INFO - T3 Signals: Long=False, Basic Long Condition=False, Cross=False
+2025-05-18 18:17:17,163 - INFO - Active orders: 18, Current price: 2.3800
+2025-05-18 18:17:17,163 - INFO - Price 2.3800 between grid levels 2.3796 and 2.4418
+2025-05-18 18:17:17,163 - INFO - No entry condition met (RSI or T3 signal not active)
+2025-05-18 18:32:17,892 - INFO - Fetched 109 candles, latest close: 2.1800
+2025-05-18 18:32:17,905 - INFO - RSI: 49.00, Previous RSI: 50.28, Oversold: 25
+2025-05-18 18:32:17,907 - INFO - RSI Buy Trigger: False
+2025-05-18 18:32:17,909 - INFO - T3: 2.3520, Previous T3: 2.3528
+2025-05-18 18:32:17,909 - INFO - T3 Signals: Long=False, Basic Long Condition=False, Cross=False
+2025-05-18 18:32:17,910 - INFO - Active orders: 18, Current price: 2.1800
+2025-05-18 18:32:17,910 - INFO - Price 2.1800 between grid levels 2.1306 and 2.1929
+2025-05-18 18:32:17,911 - INFO - No entry condition met (RSI or T3 signal not active)
+2025-05-18 18:47:18,784 - INFO - Fetched 109 candles, latest close: 2.4272
+2025-05-18 18:47:18,844 - INFO - RSI: 50.68, Previous RSI: 50.74, Oversold: 25
+2025-05-18 18:47:18,845 - INFO - RSI Buy Trigger: False
+2025-05-18 18:47:18,852 - INFO - T3: 2.3243, Previous T3: 2.3256
+2025-05-18 18:47:18,853 - INFO - T3 Signals: Long=False, Basic Long Condition=False, Cross=False
+2025-05-18 18:47:18,853 - INFO - Active orders: 18, Current price: 2.4272
+2025-05-18 18:47:18,854 - INFO - Price 2.4272 between grid levels 2.3796 and 2.4418
+2025-05-18 18:47:18,854 - INFO - No entry condition met (RSI or T3 signal not active)
+2025-05-18 19:02:19,694 - INFO - Fetched 109 candles, latest close: 2.4230
+2025-05-18 19:02:19,722 - INFO - RSI: 50.64, Previous RSI: 50.70, Oversold: 25
+2025-05-18 19:02:19,723 - INFO - RSI Buy Trigger: False
+2025-05-18 19:02:19,725 - INFO - T3: 2.3226, Previous T3: 2.3240
+2025-05-18 19:02:19,726 - INFO - T3 Signals: Long=False, Basic Long Condition=False, Cross=False
+2025-05-18 19:02:19,726 - INFO - Active orders: 18, Current price: 2.4230
+2025-05-18 19:02:19,726 - INFO - Price 2.4230 between grid levels 2.3796 and 2.4418
+2025-05-18 19:02:19,727 - INFO - No entry condition met (RSI or T3 signal not active)
+2025-05-18 19:17:20,184 - INFO - Fetched 109 candles, latest close: 2.4520
+2025-05-18 19:17:20,223 - INFO - RSI: 50.83, Previous RSI: 50.83, Oversold: 25
+2025-05-18 19:17:20,224 - INFO - RSI Buy Trigger: False
+2025-05-18 19:17:20,233 - INFO - T3: 2.3519, Previous T3: 2.3526
+2025-05-18 19:17:20,235 - INFO - T3 Signals: Long=False, Basic Long Condition=False, Cross=False
+2025-05-18 19:17:20,235 - INFO - Active orders: 18, Current price: 2.4520
+2025-05-18 19:17:20,235 - INFO - Price 2.4520 between grid levels 2.4418 and 2.5041
+2025-05-18 19:17:20,236 - INFO - No entry condition met (RSI or T3 signal not active)
+2025-05-18 22:59:23,263 - INFO - Fetched 109 candles, latest close: 2.2010
+2025-05-18 22:59:23,405 - INFO - RSI: 49.17, Previous RSI: 49.20, Oversold: 25
+2025-05-18 22:59:23,405 - INFO - RSI Buy Trigger: False
+2025-05-18 22:59:23,417 - INFO - T3: 2.3149, Previous T3: 2.3153
+2025-05-18 22:59:23,417 - INFO - T3 Signals: Long=False, Basic Long Condition=False, Cross=False
+2025-05-18 22:59:23,419 - INFO - Active orders: 18, Current price: 2.2010
+2025-05-18 22:59:23,419 - INFO - Price 2.2010 between grid levels 2.1929 and 2.2551
+2025-05-18 22:59:23,419 - INFO - No entry condition met (RSI or T3 signal not active)
+2025-05-18 23:14:24,726 - INFO - Fetched 109 candles, latest close: 2.3981
+2025-05-18 23:14:24,764 - INFO - RSI: 50.32, Previous RSI: 49.17, Oversold: 25
+2025-05-18 23:14:24,764 - INFO - RSI Buy Trigger: False
+2025-05-18 23:14:24,775 - INFO - T3: 2.3143, Previous T3: 2.3147
+2025-05-18 23:14:24,777 - INFO - T3 Signals: Long=False, Basic Long Condition=False, Cross=False
+2025-05-18 23:14:24,777 - INFO - Active orders: 18, Current price: 2.3981
+2025-05-18 23:14:24,779 - INFO - Price 2.3981 between grid levels 2.3796 and 2.4418
+2025-05-18 23:14:24,781 - INFO - No entry condition met (RSI or T3 signal not active)
+2025-05-18 23:29:26,273 - INFO - Fetched 109 candles, latest close: 2.1990
+2025-05-18 23:29:26,448 - INFO - RSI: 49.04, Previous RSI: 50.33, Oversold: 25
+2025-05-18 23:29:26,451 - INFO - RSI Buy Trigger: False
+2025-05-18 23:29:26,494 - INFO - T3: 2.3373, Previous T3: 2.3372
+2025-05-18 23:29:26,527 - INFO - T3 Signals: Long=False, Basic Long Condition=False, Cross=False
+2025-05-18 23:29:26,542 - INFO - Active orders: 18, Current price: 2.1990
+2025-05-18 23:29:26,550 - INFO - Price 2.1990 between grid levels 2.1929 and 2.2551
+2025-05-18 23:29:26,551 - INFO - No entry condition met (RSI or T3 signal not active)
+2025-05-18 23:44:27,390 - INFO - Fetched 109 candles, latest close: 2.1900
+2025-05-18 23:44:27,440 - INFO - RSI: 49.17, Previous RSI: 49.04, Oversold: 25
+2025-05-18 23:44:27,441 - INFO - RSI Buy Trigger: False
+2025-05-18 23:44:27,458 - INFO - T3: 2.2882, Previous T3: 2.2891
+2025-05-18 23:44:27,462 - INFO - T3 Signals: Long=False, Basic Long Condition=False, Cross=False
+2025-05-18 23:44:27,470 - INFO - Active orders: 18, Current price: 2.1900
+2025-05-18 23:44:27,480 - INFO - Price 2.1900 between grid levels 2.1306 and 2.1929
+2025-05-18 23:44:27,494 - INFO - No entry condition met (RSI or T3 signal not active)
+2025-05-18 23:59:30,395 - INFO - Fetched 109 candles, latest close: 2.1900
+2025-05-18 23:59:30,559 - INFO - RSI: 49.22, Previous RSI: 49.17, Oversold: 25
+2025-05-18 23:59:30,581 - INFO - RSI Buy Trigger: False
+2025-05-18 23:59:30,620 - INFO - T3: 2.2873, Previous T3: 2.2882
+2025-05-18 23:59:30,630 - INFO - T3 Signals: Long=False, Basic Long Condition=False, Cross=False
+2025-05-18 23:59:30,631 - INFO - Active orders: 18, Current price: 2.1900
+2025-05-18 23:59:30,642 - INFO - Price 2.1900 between grid levels 2.1306 and 2.1929
+2025-05-18 23:59:30,646 - INFO - No entry condition met (RSI or T3 signal not active)
+2025-05-19 00:14:31,715 - INFO - Fetched 109 candles, latest close: 2.4520
+2025-05-19 00:14:31,806 - INFO - RSI: 50.55, Previous RSI: 49.22, Oversold: 25
+2025-05-19 00:14:31,814 - INFO - RSI Buy Trigger: False
+2025-05-19 00:14:31,861 - INFO - T3: 2.3357, Previous T3: 2.3355
+2025-05-19 00:14:31,896 - INFO - T3 Signals: Long=True, Basic Long Condition=True, Cross=True
+2025-05-19 00:14:31,926 - INFO - Active orders: 18, Current price: 2.4520
+2025-05-19 00:14:31,946 - INFO - Price 2.4520 between grid levels 2.4418 and 2.5041
+2025-05-19 00:14:31,964 - INFO - Entry condition met, checking grid levels
+2025-05-19 00:29:33,129 - INFO - Fetched 109 candles, latest close: 2.2000
+2025-05-19 00:29:33,158 - INFO - RSI: 49.23, Previous RSI: 50.55, Oversold: 25
+2025-05-19 00:29:33,158 - INFO - RSI Buy Trigger: False
+2025-05-19 00:29:33,184 - INFO - T3: 2.3133, Previous T3: 2.3137
+2025-05-19 00:29:33,210 - INFO - T3 Signals: Long=False, Basic Long Condition=False, Cross=False
+2025-05-19 00:29:33,216 - INFO - Active orders: 18, Current price: 2.2000
+2025-05-19 00:29:33,231 - INFO - Price 2.2000 between grid levels 2.1929 and 2.2551
+2025-05-19 00:29:33,234 - INFO - No entry condition met (RSI or T3 signal not active)
+2025-05-19 00:44:34,069 - INFO - Fetched 109 candles, latest close: 2.2000
+2025-05-19 00:44:34,134 - INFO - RSI: 48.27, Previous RSI: 49.23, Oversold: 25
+2025-05-19 00:44:34,135 - INFO - RSI Buy Trigger: False
+2025-05-19 00:44:34,147 - INFO - T3: 2.3123, Previous T3: 2.3126
+2025-05-19 00:44:34,148 - INFO - T3 Signals: Long=False, Basic Long Condition=False, Cross=False
+2025-05-19 00:44:34,148 - INFO - Active orders: 18, Current price: 2.2000
+2025-05-19 00:44:34,149 - INFO - Price 2.2000 between grid levels 2.1929 and 2.2551
+2025-05-19 00:44:34,150 - INFO - No entry condition met (RSI or T3 signal not active)
+2025-05-19 00:59:34,397 - INFO - Fetched 109 candles, latest close: 2.4520
+2025-05-19 00:59:34,402 - INFO - RSI: 50.72, Previous RSI: 48.27, Oversold: 25
+2025-05-19 00:59:34,403 - INFO - RSI Buy Trigger: False
+2025-05-19 00:59:34,405 - INFO - T3: 2.3133, Previous T3: 2.3136
+2025-05-19 00:59:34,405 - INFO - T3 Signals: Long=False, Basic Long Condition=False, Cross=False
+2025-05-19 00:59:34,405 - INFO - Active orders: 18, Current price: 2.4520
+2025-05-19 00:59:34,406 - INFO - Price 2.4520 between grid levels 2.4418 and 2.5041
+2025-05-19 00:59:34,407 - INFO - No entry condition met (RSI or T3 signal not active)
+2025-05-19 01:14:35,222 - INFO - Fetched 109 candles, latest close: 2.3837
+2025-05-19 01:14:35,253 - INFO - RSI: 50.27, Previous RSI: 50.72, Oversold: 25
+2025-05-19 01:14:35,253 - INFO - RSI Buy Trigger: False
+2025-05-19 01:14:35,256 - INFO - T3: 2.3123, Previous T3: 2.3126
+2025-05-19 01:14:35,256 - INFO - T3 Signals: Long=False, Basic Long Condition=False, Cross=False
+2025-05-19 01:14:35,257 - INFO - Active orders: 18, Current price: 2.3837
+2025-05-19 01:14:35,257 - INFO - Price 2.3837 between grid levels 2.3796 and 2.4418
+2025-05-19 01:14:35,257 - INFO - No entry condition met (RSI or T3 signal not active)
+2025-05-19 01:29:35,792 - INFO - Fetched 109 candles, latest close: 2.4520
+2025-05-19 01:29:35,822 - INFO - RSI: 50.64, Previous RSI: 50.67, Oversold: 25
+2025-05-19 01:29:35,822 - INFO - RSI Buy Trigger: False
+2025-05-19 01:29:35,831 - INFO - T3: 2.3096, Previous T3: 2.3100
+2025-05-19 01:29:35,834 - INFO - T3 Signals: Long=False, Basic Long Condition=False, Cross=False
+2025-05-19 01:29:35,834 - INFO - Active orders: 18, Current price: 2.4520
+2025-05-19 01:29:35,834 - INFO - Price 2.4520 between grid levels 2.4418 and 2.5041
+2025-05-19 01:29:35,839 - INFO - No entry condition met (RSI or T3 signal not active)
+2025-05-19 01:44:36,438 - INFO - Fetched 109 candles, latest close: 2.1900
+2025-05-19 01:44:36,494 - INFO - RSI: 50.17, Previous RSI: 50.64, Oversold: 25
+2025-05-19 01:44:36,494 - INFO - RSI Buy Trigger: False
+2025-05-19 01:44:36,505 - INFO - T3: 2.3083, Previous T3: 2.3087
+2025-05-19 01:44:36,506 - INFO - T3 Signals: Long=False, Basic Long Condition=False, Cross=False
+2025-05-19 01:44:36,507 - INFO - Active orders: 18, Current price: 2.1900
+2025-05-19 01:44:36,507 - INFO - Price 2.1900 between grid levels 2.1306 and 2.1929
+2025-05-19 01:44:36,508 - INFO - No entry condition met (RSI or T3 signal not active)
+2025-05-19 01:59:37,595 - INFO - Fetched 109 candles, latest close: 2.3870
+2025-05-19 01:59:37,677 - INFO - RSI: 50.34, Previous RSI: 51.76, Oversold: 25
+2025-05-19 01:59:37,678 - INFO - RSI Buy Trigger: False
+2025-05-19 01:59:37,696 - INFO - T3: 2.3122, Previous T3: 2.3123
+2025-05-19 01:59:37,698 - INFO - T3 Signals: Long=False, Basic Long Condition=False, Cross=False
+2025-05-19 01:59:37,704 - INFO - Active orders: 18, Current price: 2.3870
+2025-05-19 01:59:37,708 - INFO - Price 2.3870 between grid levels 2.3796 and 2.4418
+2025-05-19 01:59:37,708 - INFO - No entry condition met (RSI or T3 signal not active)
+2025-05-19 02:14:38,195 - INFO - Fetched 109 candles, latest close: 2.1900
+2025-05-19 02:14:38,226 - INFO - RSI: 49.05, Previous RSI: 50.34, Oversold: 25
+2025-05-19 02:14:38,233 - INFO - RSI Buy Trigger: False
+2025-05-19 02:14:38,245 - INFO - T3: 2.3131, Previous T3: 2.3132
+2025-05-19 02:14:38,245 - INFO - T3 Signals: Long=False, Basic Long Condition=False, Cross=False
+2025-05-19 02:14:38,245 - INFO - Active orders: 18, Current price: 2.1900
+2025-05-19 02:14:38,248 - INFO - Price 2.1900 between grid levels 2.1306 and 2.1929
+2025-05-19 02:14:38,250 - INFO - No entry condition met (RSI or T3 signal not active)
+2025-05-19 09:00:07,219 - INFO - Fetched 109 candles, latest close: 2.1881
+2025-05-19 09:00:07,260 - INFO - RSI: 50.13, Previous RSI: 49.21, Oversold: 25
+2025-05-19 09:00:07,261 - INFO - RSI Buy Trigger: False
+2025-05-19 09:00:07,265 - INFO - T3: 2.3121, Previous T3: 2.3118
+2025-05-19 09:00:07,265 - INFO - T3 Signals: Long=False, Basic Long Condition=False, Cross=False
+2025-05-19 09:00:07,265 - INFO - Active orders: 18, Current price: 2.1881
+2025-05-19 09:00:07,266 - INFO - Price 2.1881 between grid levels 2.1306 and 2.1929
+2025-05-19 09:00:07,266 - INFO - No entry condition met (RSI or T3 signal not active)
