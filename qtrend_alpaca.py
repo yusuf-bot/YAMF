@@ -11,7 +11,6 @@ import ccxt
 from dotenv import load_dotenv
 import time
 from threading import Thread
-import jsonify
 
 # === CONFIG ===
 SYMBOL = "ETH/USD"
