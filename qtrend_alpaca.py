@@ -7,7 +7,7 @@ from flask import Flask, jsonify
 from alpaca.trading.client import TradingClient
 from alpaca.trading.requests import MarketOrderRequest
 from alpaca.trading.enums import OrderSide, TimeInForce, OrderType
-import ccxt
+import requests
 from dotenv import load_dotenv
 import time
 from threading import Thread
@@ -71,22 +71,41 @@ def save_trade_state(state):
 
 def fetch_bars(symbol, start_time, end_time):
     try:
-        coinbase = ccxt.coinbase()
+        # Coinbase uses '-' instead of '/' in symbols
+        product_id = symbol.replace('/', '-')
+        granularity = 300  # 5-minute candles
+        limit = 71
 
-        # Fetch OHLCV data for ETH/USD with 5-minute timeframe
-        bars = coinbase.fetch_ohlcv('ETH/USD', timeframe='5m', limit=71)
+        params = {
+            'start': start_time.isoformat(),
+            'end': end_time.isoformat(),
+            'granularity': granularity
+        }
 
-        # Create DataFrame and convert timestamp
-        df = pd.DataFrame(bars, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
-        df['timestamp'] = pd.to_datetime(df['timestamp'], unit='ms')
+        url = f"https://api.exchange.coinbase.com/products/{product_id}/candles"
+        response = requests.get(url, params=params)
+
+        if response.status_code != 200:
+            print(f"Failed to fetch data. HTTP {response.status_code}: {response.text}")
+            return None
+
+        data = response.json()
+        if not data:
+            print("No data returned from Coinbase.")
+            return None
+
+        # Columns: time, low, high, open, close, volume
+        df = pd.DataFrame(data, columns=['timestamp', 'low', 'high', 'open', 'close', 'volume'])
+        df['timestamp'] = pd.to_datetime(df['timestamp'], unit='s')
+        df = df.sort_values('timestamp').reset_index(drop=True)
 
         print(df.tail())
-
         print(len(df), "rows fetched")
         return df
 
     except Exception as e:
-        print(f"Failed to fetch data.")
+        print(f"Failed to fetch data: {e}")
+        return None
 
 
 def compute_t3(close):
