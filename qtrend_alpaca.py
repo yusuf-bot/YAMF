@@ -11,7 +11,7 @@ import ccxt
 from dotenv import load_dotenv
 import time
 from threading import Thread
-
+import jsonify
 
 # === CONFIG ===
 SYMBOL = "ETH/USD"
@@ -196,11 +196,11 @@ def run_trading_strategy():
 
 @app.route('/')
 def home():
-    print({"message": "Flask is working!", "status": "success"})
+    return jsonify({"message": "Flask is working!", "status": "success"})
 
 @app.route('/test')
 def test():
-    print({"message": "Test endpoint working", "status": "success"})
+    return jsonify({"message": "Test endpoint working", "status": "success"})
 
 
 @app.route('/run-strategy', methods=['GET'])
