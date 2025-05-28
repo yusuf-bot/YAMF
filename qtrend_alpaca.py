@@ -123,7 +123,7 @@ def should_buy(t3, close):
 
 def run_trading_strategy():
     """Execute trading strategy."""
-    time.sleep(6)
+    time.sleep(25)
     try:
         # Load state
         state = load_trade_state()
