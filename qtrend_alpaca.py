@@ -210,7 +210,7 @@ def run_trading_strategy():
     except Exception as e:
         import traceback
         print(f"Strategy error: {e}")
-        traceback.print_exec()
+
 
 @app.route('/')
 def home():
