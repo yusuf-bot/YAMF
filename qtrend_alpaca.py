@@ -208,7 +208,6 @@ def run_trading_strategy():
         print({"status": "called", "message": f"{trades_bought} opened {trades_sold} closed"})
         return "pass"
     except Exception as e:
-        import traceback
         print(f"Strategy error: {e}")
 
 
