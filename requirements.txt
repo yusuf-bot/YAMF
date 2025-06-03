@@ -5,4 +5,5 @@ alpaca-py==0.13.1
 ccxt==4.1.99
 python-dotenv==1.0.1
 requests
+logging
 gunicorn
