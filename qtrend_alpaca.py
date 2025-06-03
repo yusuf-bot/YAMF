@@ -84,8 +84,8 @@ def load_supabase_data():
         return result
     else:
         warning_logger.warning("Failed to fetch data")
-        warning_logger.warning("Status Code:", response.status_code)
-        warning_logger.warning("Response:", response.text)
+        warning_logger.warning(f"Status Code: {response.status_code}")
+        warning_logger.warning(f"Response: {response.text}")
         return {"order_tracker": [], "qty_tracker": []}
 
 
@@ -100,7 +100,7 @@ def update_rows(i, order_tracker, qty_tracker):
             headers=headers,
             json=data
         )
-        info_logger.info(f"Update row {i}:", response.status_code, data)
+        info_logger.info(f"Update row {i}: {response.status_code}  {data}")
 
 
 def fetch_bars(symbol, start_time, end_time):
@@ -134,7 +134,7 @@ def fetch_bars(symbol, start_time, end_time):
         df = df.sort_values('timestamp').reset_index(drop=True)
 
         info_logger.info(df.tail())
-        info_logger.info(len(df), "rows fetched")
+        info_logger.info(f"{len(df)} rows fetched")
         return df
 
     except Exception as e:
@@ -238,7 +238,7 @@ def run_trading_strategy():
                             error_logger.error(f"Close position failed: {e}")
 
 
-        info_logger.info({"status": "called", "message": f"{trades_bought} opened {trades_sold} closed"})
+        info_logger.info( f"{trades_bought} opened {trades_sold} closed")
         return "pass"
     except Exception as e:
         error_logger.error(f"Strategy error: {e}")
