@@ -209,6 +209,7 @@ def run_trading_strategy():
         # Exit logic
         for i in range(GRID_QTY - 1):
             if state['order_tracker'][i]:
+                info_logger.info(f"Checking exit for Grid {i} | Price: {grid_lines[i]} | Close: {bars['close'].iloc[-1]} | Next Price: {grid_lines[i + 1]}")
                 next_price = grid_lines[i + 1]
                 if bars['close'].iloc[-1] > next_price:
                     try:
