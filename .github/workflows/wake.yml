@@ -1,0 +1,14 @@
+name: Wake Render App Every 30s
+
+on:
+  schedule:
+    - cron: '* * * * *'  # every minute
+
+jobs:
+  ping-render:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping app twice, 30s apart
+        run: |
+          curl -m 60 https://your-render-url.onrender.com/ping || true
+  
