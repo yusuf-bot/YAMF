@@ -10,5 +10,5 @@ jobs:
     steps:
       - name: Ping app twice, 30s apart
         run: |
-          curl -m 60 https://your-render-url.onrender.com/ping || true
+          curl -m 60 https://yamf-1.onrender.com/test || true
   
