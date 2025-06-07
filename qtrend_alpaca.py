@@ -202,6 +202,7 @@ def run_trading_strategy():
                         ))
                         trades_bought+=1
                         state['order_tracker'][i] = True
+                        active_count = state['order_tracker'].count(True)
                         update_rows(i, state['order_tracker'][i], state['qty_tracker'][i])
                         info_logger.info(f"BUY Grid {i} at {grid_price:.2f} | Qty: {quantity} | Predicted Close: {grid_lines[i + 1]:.2f}")
 
