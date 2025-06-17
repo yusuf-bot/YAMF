@@ -18,10 +18,10 @@ SYMBOL = "ETH/USD"
 EMA_LENGTH = 70
 UPPER_BOUND = 3000
 LOWER_BOUND = 2000
-GRID_QTY = 30
-MAX_PYRAMIDING = 4
+GRID_QTY = 60
+MAX_PYRAMIDING = 35
 LEVERAGE = 1
-STAKE_PCT = 20  # Percent of equity per trade
+STAKE_PCT = 2.7  # Percent of equity per trade
 
 
 # === INIT ===
