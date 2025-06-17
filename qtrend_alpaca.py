@@ -144,7 +144,7 @@ def fetch_bars(symbol, start_time, end_time):
 
 def compute_t3(close):
     """Compute T3 using EMA."""
-    return close.ewm(span=EMA_LENGTH).mean()
+    return close.ewm(span=EMA_LENGTH).mean().ewm(span=EMA_LENGTH).mean().ewm(span=EMA_LENGTH).mean()
 
 def build_grid():
     """Build grid levels."""
@@ -153,6 +153,7 @@ def build_grid():
 
 def should_buy(t3, close):
     """Check buy condition."""
+    info_logger.info(f"Checking buy condition: Previous_T3={t3.iloc[-2]} T3={t3.iloc[-1]}, Close={close.iloc[-1]}")
     return t3.iloc[-1] > t3.iloc[-2] and close.iloc[-1] > t3.iloc[-1]
 
 def run_trading_strategy():
@@ -181,6 +182,7 @@ def run_trading_strategy():
         trades_bought=0
         trades_sold=0
         # Buy logic
+
         if should_buy(t3, bars['close']):
             info_logger.info("Buy condition met")
             active_count = state['order_tracker'].count(True)
