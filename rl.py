@@ -11,6 +11,9 @@ import time
 from gym import spaces
 import matplotlib.pyplot as plt
 from stable_baselines3 import PPO
+from stable_baselines3.common.callbacks import CheckpointCallback
+import logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s %(message)s')
 
 # Download historical 4H data for BTC/USD
 def get_data(symbol='BTC/USDT', timeframe='4h', limit=500):
@@ -32,6 +35,7 @@ class TradingEnv(gym.Env):
     def __init__(self, df):
         super(TradingEnv, self).__init__()
         self.df = df
+        self.current_step = 0
         self.max_steps = len(df) - 1
         self.initial_balance = 1000.0
         self.reset()
@@ -46,9 +50,11 @@ class TradingEnv(gym.Env):
         self.step_idx = 0
         self.balance = self.initial_balance
         self.shares = 0
+        self.current_step = 0
         self.equity_curve = []
         self.max_drawdown = 0
         self.max_equity = self.initial_balance
+        logging.info(f"--- Environment reset --- Starting balance: ${self.balance}")
         return self._get_observation()
 
     def _get_observation(self):
@@ -66,6 +72,7 @@ class TradingEnv(gym.Env):
 
     def step(self, action):
         done = False
+        self.current_step +=1
         reward = 0.0
         price = self.df.iloc[self.step_idx]['Close']
 
@@ -91,6 +98,7 @@ class TradingEnv(gym.Env):
         self.step_idx += 1
         if self.step_idx >= self.max_steps:
             done = True
+        logging.info(f"Step: {self.current_step} | Action: {action} | Price: {price:.2f} | Balance: {self.balance:.2f}")
 
         return self._get_observation(), reward, done, {}
 
@@ -128,9 +136,17 @@ env = TradingEnv(df)
 
 # Train the PPO agent
 model = PPO("MlpPolicy", env, verbose=1)
+checkpoint_callback = CheckpointCallback(
+    save_freq=1000,  # steps
+    save_path="./models/",
+    name_prefix="ppo_trading_model",
+    verbose=1,
+)
+
 model.learn(total_timesteps=5000)
 
-# Test the agent
+# Test the 
+model.save("ppo_trading_final")
 obs = env.reset()
 done = False
 while not done:

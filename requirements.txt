@@ -1,9 +1,24 @@
+# Web framework
 flask==2.3.3
+gunicorn
+
+# Data handling
 pandas==2.2.2
 numpy==1.26.4
+pandas_ta==0.3.14b0  # Compatible TA-Lib wrapper
+
+# Machine learning & model handling
+torch==2.2.2  # or the latest stable version compatible with your system
+joblib==1.4.2
+scikit-learn==1.4.2  # Needed for StandardScaler
+
+# Trading & APIs
 alpaca-py==0.13.1
 ccxt==4.1.99
+requests==2.31.0
 python-dotenv==1.0.1
-requests
-logging
-gunicorn
+
+# Plotting (optional, only if you use matplotlib in production)
+matplotlib==3.8.4
+
+# Logging (standard library, no need to install separately)

@@ -1,23 +1,22 @@
-import ccxt
-import time
 import numpy as np
 import pandas as pd
-import torch
+import ccxt
+import time, torch, joblib, datetime
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader, random_split
 from sklearn.preprocessing import StandardScaler
 import pandas_ta as ta
 import matplotlib.pyplot as plt
+import os
 
-# === 1. Download 4H BTC/USDT data from Binance via ccxt ===
-def download_data(symbol="BTC/USDT", timeframe="4h", limit=1000):
+# === 1. Download 4H BTC/USDT data from Binance ===
+def download_data(symbol="BTC/USDT", limit=300):
     exchange = ccxt.binance()
-    ohlcv = exchange.fetch_ohlcv(symbol, timeframe=timeframe, limit=limit)
-    df = pd.DataFrame(ohlcv, columns=["timestamp", "Open", "High", "Low", "Close", "Volume"])
-    df["timestamp"] = pd.to_datetime(df["timestamp"], unit="ms")
-    df.set_index("timestamp", inplace=True)
-    df.dropna(inplace=True)
+    ohlcv = exchange.fetch_ohlcv(symbol, timeframe='4h', limit=limit)
+    df = pd.DataFrame(ohlcv, columns=["Time", "Open", "High", "Low", "Close", "Volume"])
+    df["Time"] = pd.to_datetime(df["Time"], unit="ms")
+    df.set_index("Time", inplace=True)
     return df
 
 # === 2. Add technical indicators ===
@@ -29,9 +28,9 @@ def add_indicators(df):
     df.ta.atr(length=14, append=True)
     df.ta.bbands(length=20, append=True)
     df.ta.supertrend(append=True)
-    df.ta.stoch(length=14, append=True)
+    df.ta.stoch(k=14, d=3, append=True)
     df.ta.mfi(length=14, append=True)
-    df.fillna(method="bfill", inplace=True)
+    df.bfill(inplace=True)
     return df
 
 # === 3. Dataset Preparation ===
@@ -41,7 +40,7 @@ class SequenceDataset(Dataset):
             "Open", "High", "Low", "Close", "Volume",
             "EMA_20", "EMA_50", "RSI_14", "MACD_12_26_9", "MACDs_12_26_9",
             "ATRr_14", "BBL_20_2.0", "BBU_20_2.0", "BBB_20_2.0", "SUPERT_7_3.0",
-            "STOCHk_14", "STOCHd_14", "MFI_14"
+            "STOCHk_14_3_3", "STOCHd_14_3_3", "MFI_14"
         ]
         data = df[features].values
         self.scaler = StandardScaler()
@@ -54,6 +53,8 @@ class SequenceDataset(Dataset):
             label = 1 if future_return > threshold else 0
             self.sequences.append(torch.tensor(seq, dtype=torch.float32))
             self.labels.append(torch.tensor(label, dtype=torch.float32))
+
+        joblib.dump(self.scaler, "scaler.pkl")
 
     def __len__(self):
         return len(self.sequences)
@@ -78,14 +79,13 @@ class TransformerClassifier(nn.Module):
     def forward(self, x):
         x = self.input_linear(x)
         x = self.transformer(x)
-        x = x.mean(dim=1)  # global average pooling
+        x = x.mean(dim=1)
         return self.output(x).squeeze()
 
 # === 5. Train Function ===
 def train_model(model, dataloader, val_loader, epochs=10):
     criterion = nn.BCEWithLogitsLoss()
     optimizer = optim.Adam(model.parameters(), lr=0.001)
-    train_loss, val_loss = [], []
 
     for epoch in range(epochs):
         model.train()
@@ -97,66 +97,89 @@ def train_model(model, dataloader, val_loader, epochs=10):
             loss.backward()
             optimizer.step()
             total_loss += loss.item()
-        train_loss.append(total_loss / len(dataloader))
-
-        model.eval()
-        total_val = 0
-        with torch.no_grad():
-            for x, y in val_loader:
-                preds = model(x)
-                loss = criterion(preds, y)
-                total_val += loss.item()
-        val_loss.append(total_val / len(val_loader))
-        print(f"Epoch {epoch+1}: Train Loss={train_loss[-1]:.4f} | Val Loss={val_loss[-1]:.4f}")
-
+        print(f"Epoch {epoch+1} | Train Loss: {total_loss / len(dataloader):.4f}")
     return model
 
-# === 6. Backtest Function ===
-def backtest(model, dataset, threshold=0.5):
+# === 6. Save / Load model ===
+def save_model(model):
+    torch.save(model.state_dict(), "transformer_model.pt")
+
+def load_model(input_dim, seq_len):
+    model = TransformerClassifier(input_dim, seq_len)
+    model.load_state_dict(torch.load("transformer_model.pt"))
     model.eval()
-    prices = []
-    preds_bin, true_bin = [], []
-    with torch.no_grad():
-        for i in range(len(dataset)):
-            x, y = dataset[i]
-            prob = torch.sigmoid(model(x.unsqueeze(0))).item()
-            pred = 1 if prob > threshold else 0
-            preds_bin.append(pred)
-            true_bin.append(int(y.item()))
-            prices.append(x[-1][3].item())  # closing price in last candle of sequence
+    return model
 
-    returns = []
-    for i in range(1, len(prices)):
-        if preds_bin[i - 1] == 1:
-            returns.append((prices[i] - prices[i - 1]) / prices[i - 1])
-        else:
-            returns.append(0)
+# === 7. Live Prediction Loop ===
+def predict_loop(seq_len=24, threshold=0.5):
+    scaler = joblib.load("scaler.pkl")
+    model = load_model(input_dim=18, seq_len=seq_len)
 
-    equity = np.cumprod([1 + r for r in returns])
-    plt.plot(equity)
-    plt.title("Backtest Equity Curve")
-    plt.xlabel("Trades")
-    plt.ylabel("Equity")
-    plt.grid(True)
-    plt.show()
+    last_prediction = None
+    last_price = None
+    success_count = 0
+    total_count = 0
+    profit = 0
 
-    acc = np.mean(np.array(preds_bin) == np.array(true_bin))
-    print(f"Prediction Accuracy: {acc * 100:.2f}%")
+    while True:
+        df = download_data()
+        df = add_indicators(df)
+        features = [
+            "Open", "High", "Low", "Close", "Volume",
+            "EMA_20", "EMA_50", "RSI_14", "MACD_12_26_9", "MACDs_12_26_9",
+            "ATRr_14", "BBL_20_2.0", "BBU_20_2.0", "BBB_20_2.0", "SUPERT_7_3.0",
+            "STOCHk_14_3_3", "STOCHd_14_3_3", "MFI_14"
+        ]
 
-# === 7. Run the Full Pipeline ===
-df = download_data()
-df = add_indicators(df)
-dataset = SequenceDataset(df)
-train_size = int(0.8 * len(dataset))
-val_size = len(dataset) - train_size
-train_set, val_set = random_split(dataset, [train_size, val_size])
-train_loader = DataLoader(train_set, batch_size=64, shuffle=True)
-val_loader = DataLoader(val_set, batch_size=64)
+        data = df[features].values
+        data = scaler.transform(data)
+        seq = torch.tensor(data[-seq_len:], dtype=torch.float32).unsqueeze(0)
 
-input_dim = dataset[0][0].shape[1]
-seq_len = dataset[0][0].shape[0]
+        with torch.no_grad():
+            prob = torch.sigmoid(model(seq)).item()
+            prediction = 1 if prob > threshold else 0
 
-model = TransformerClassifier(input_dim=input_dim, seq_len=seq_len)
-model = train_model(model, train_loader, val_loader, epochs=15)
+        curr_price = df["Close"].iloc[-1]
+        print(f"[{datetime.datetime.now().strftime('%Y-%m-%d %H:%M')}] Prediction: {'UP' if prediction else 'DOWN'} | Price: {curr_price:.2f}")
 
-backtest(model, val_set)
+        if last_prediction is not None and last_price is not None:
+            move = curr_price - last_price
+            pnl = move if last_prediction == 1 else -move
+            profit += pnl
+            success = (last_prediction == (1 if move > 0 else 0))
+            success_count += success
+            total_count += 1
+            acc = success_count / total_count * 100
+            print(f"Success: {success} | Total: {total_count} | Success Rate: {acc:.2f}% | PnL: {profit:.2f}")
+
+        last_prediction = prediction
+        last_price = curr_price
+
+        # Wait until next 4H candle
+        now = datetime.datetime.utcnow()
+        hours_to_wait = 4 - (now.hour % 4)
+        next_candle = now.replace(minute=0, second=0, microsecond=0) + datetime.timedelta(hours=hours_to_wait)
+        wait_seconds = (next_candle - now).total_seconds()
+        print(f"Sleeping for {wait_seconds / 60:.2f} minutes until next 4H candle...\n")
+        time.sleep(wait_seconds)
+
+# === 8. Run Training Pipeline ===
+if __name__ == "__main__":
+    if not os.path.exists("transformer_model.pt"):
+        df = download_data()
+        df = add_indicators(df)
+        dataset = SequenceDataset(df)
+        train_size = int(0.8 * len(dataset))
+        val_size = len(dataset) - train_size
+        train_set, val_set = random_split(dataset, [train_size, val_size])
+        train_loader = DataLoader(train_set, batch_size=64, shuffle=True)
+        val_loader = DataLoader(val_set, batch_size=64)
+        input_dim = dataset[0][0].shape[1]
+        seq_len = dataset[0][0].shape[0]
+
+        model = TransformerClassifier(input_dim=input_dim, seq_len=seq_len)
+        model = train_model(model, train_loader, val_loader, epochs=15)
+        save_model(model)
+
+    # Start live loop
+    predict_loop()
