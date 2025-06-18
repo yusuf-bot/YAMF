@@ -2,7 +2,7 @@ import os
 import json
 import pandas as pd
 import numpy as np
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 from flask import Flask, jsonify
 from alpaca.trading.client import TradingClient
 from alpaca.trading.requests import MarketOrderRequest
@@ -34,10 +34,6 @@ load_dotenv()
 API_KEY = os.getenv("ALPACA_API_KEY")
 API_SECRET = os.getenv("ALPACA_SECRET_KEY")
 trading_client = TradingClient(API_KEY, API_SECRET, paper=True)
-
-API_KEY_ai = os.getenv("ALPACA_API_KEY")
-API_SECRET_ai = os.getenv("ALPACA_SECRET_KEY")
-trading_client_ai = TradingClient(API_KEY, API_SECRET, paper=True)
 
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
@@ -347,7 +343,8 @@ def test():
 def run_strategy():
     def task():
         try:
-            now = datetime.utcnow()
+            now = datetime.now(UTC)
+
             if now.hour % 4 == 0 and now.minute == 0:
                 info_logger.info("Running AI strategy")
                 run_ai_strat(seq_len=24, threshold=0.5)
