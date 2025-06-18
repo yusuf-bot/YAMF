@@ -56,6 +56,7 @@ def clear_and_setup_rows(num_rows):
         new_rows = []
         for i in range(num_rows):
             new_rows.append({
+                "id": i,
                 "order_tracker": False,
                 "qty_tracker": 0.0
             })

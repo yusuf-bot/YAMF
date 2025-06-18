@@ -226,7 +226,10 @@ def fetch_bars(symbol, start_time, end_time):
 
 def compute_t3(close):
     """Compute T3 using EMA."""
-    return close.ewm(span=EMA_LENGTH).mean().ewm(span=EMA_LENGTH).mean().ewm(span=EMA_LENGTH).mean()
+    ema1 = close.ewm(span=70).mean()
+    ema2 = ema1.ewm(span=70).mean()
+    ema3 = ema2.ewm(span=70).mean()
+    return ema3
 
 def build_grid():
     """Build grid levels."""
