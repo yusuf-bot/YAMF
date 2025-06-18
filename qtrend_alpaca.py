@@ -92,7 +92,7 @@ def run_ai_strat(seq_len=24, threshold=0.5):
     prev_profit = last_row.get("profit", 0.0)
 
     # Step 2: Fetch and process data
-    df = fetch_bars(SYMBOL_AI, datetime.datetime.utcnow() - datetime.timedelta(days=500), datetime.datetime.utcnow())
+    df = fetch_bars(SYMBOL_AI, datetime.now(UTC) - datetime.timedelta(days=500), datetime.now(UTC))
     df = add_indicators(df)
 
     features = [
