@@ -92,7 +92,7 @@ def run_ai_strat(seq_len=24, threshold=0.5):
     prev_profit = last_row.get("profit", 0.0)
 
     # Step 2: Fetch and process data
-    df = fetch_bars(SYMBOL_AI, datetime.now(UTC) - datetime.timedelta(days=500), datetime.now(UTC))
+    df = fetch_bars(SYMBOL_AI, datetime.now(UTC) - timedelta(days=500), datetime.now(UTC))
     df = add_indicators(df)
 
     features = [
@@ -251,7 +251,7 @@ def run_trading_strategy():
 
 
         # Fetch bars
-        end_time = datetime.utcnow()
+        end_time = datetime.now(UTC)
         start_time = end_time - timedelta(minutes=(EMA_LENGTH + 1) * 5)
         bars = fetch_bars(SYMBOL, start_time, end_time)
         if bars is None or len(bars) < EMA_LENGTH + 1:
