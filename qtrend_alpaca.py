@@ -92,7 +92,7 @@ def run_ai_strat(seq_len=24, threshold=0.5):
     prev_profit = last_row.get("profit", 0.0)
 
     # Step 2: Fetch and process data
-    df = fetch_bars(SYMBOL_AI, datetime.now(UTC) - timedelta(days=500), datetime.now(UTC))
+    df = fetch_bars(SYMBOL_AI, datetime.now(UTC) - timedelta(days=500), datetime.now(UTC),granularity=3000)
     df = add_indicators(df)
 
     features = [
@@ -185,43 +185,58 @@ def update_rows(i, order_tracker, qty_tracker):
         info_logger.info(f"Update row {i}: {response.status_code}  {data}")
 
 
-def fetch_bars(symbol, start_time, end_time):
+def fetch_bars(symbol, start_time, end_time, granularity=300):
     try:
-        # Coinbase uses '-' instead of '/' in symbols
         product_id = symbol.replace('/', '-')
-        granularity = 300  # 5-minute candles
-        limit = 71
+        max_candles = 300  # Coinbase limit per request
+        delta_seconds = granularity * max_candles
 
-        params = {
-            'start': start_time.isoformat(),
-            'end': end_time.isoformat(),
-            'granularity': granularity
-        }
+        all_data = []
+        current_start = start_time
 
-        url = f"https://api.exchange.coinbase.com/products/{product_id}/candles"
-        response = requests.get(url, params=params)
+        while current_start < end_time:
+            current_end = min(current_start + timedelta(seconds=delta_seconds), end_time)
 
-        if response.status_code != 200:
-            error_logger.error(f"Failed to fetch data. HTTP {response.status_code}: {response.text}")
+            params = {
+                'start': current_start.isoformat(),
+                'end': current_end.isoformat(),
+                'granularity': granularity
+            }
+
+            url = f"https://api.exchange.coinbase.com/products/{product_id}/candles"
+            response = requests.get(url, params=params)
+
+            if response.status_code != 200:
+                error_logger.error(f"Failed to fetch data. HTTP {response.status_code}: {response.text}")
+                return None
+
+            data = response.json()
+            if not data:
+                warning_logger.warning(f"No data returned from {current_start} to {current_end}.")
+                break
+
+            all_data.extend(data)
+            current_start = current_end  # Move window forward
+
+            time.sleep(0.2)  # Avoid rate limits
+
+        if not all_data:
+            warning_logger.warning("No data collected across all intervals.")
             return None
 
-        data = response.json()
-        if not data:
-            warning_logger.warning("No data returned from Coinbase.")
-            return None
-
-        # Columns: time, low, high, open, close, volume
-        df = pd.DataFrame(data, columns=['timestamp', 'low', 'high', 'open', 'close', 'volume'])
+        # Coinbase returns: [time, low, high, open, close, volume]
+        df = pd.DataFrame(all_data, columns=['timestamp', 'low', 'high', 'open', 'close', 'volume'])
         df['timestamp'] = pd.to_datetime(df['timestamp'], unit='s')
         df = df.sort_values('timestamp').reset_index(drop=True)
 
         info_logger.info(df.tail())
-        info_logger.info(f"{len(df)} rows fetched")
+        info_logger.info(f"{len(df)} rows fetched from {start_time} to {end_time}")
         return df
 
     except Exception as e:
         error_logger.error(f"Failed to fetch data: {e}")
         return None
+
 
 
 def compute_t3(close):
