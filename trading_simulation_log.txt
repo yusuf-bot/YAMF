@@ -1,0 +1,29 @@
+2025-06-24 19:01:36,309 - WARNING - Model files not found. Using simple strategy instead.
+2025-06-24 19:01:36,309 - INFO - Starting trading simulation
+2025-06-24 19:01:36,314 - INFO - Fetching latest ETH/USDT 4h data
+2025-06-24 19:01:39,787 - INFO - Fetched 500 data points. Latest: 2025-06-24 12:00:00
+2025-06-24 19:01:39,789 - INFO - Adding technical features
+2025-06-24 19:01:40,192 - INFO - Signal: 1, Probability: 80.00%, Price: 2434.80
+2025-06-24 19:01:40,192 - INFO - Simulated order: buy 0.7393 ETH/USDT at 2434.80
+2025-06-24 19:01:40,194 - INFO - Opened long position: Size=0.7393, Entry=$2434.80, Margin=$600.00
+2025-06-24 19:01:40,197 - INFO - Capital: $9999.10, Unrealized PnL: $0.00, Total Equity: $9999.10
+2025-06-24 19:05:56,108 - INFO - Simulation stopped by user
+2025-06-24 19:05:56,108 - INFO - Closing open position...
+2025-06-24 19:21:34,414 - INFO - Loaded saved model, scaler, and feature columns
+2025-06-24 19:21:34,417 - INFO - Starting trading simulation
+2025-06-24 19:21:34,417 - INFO - Fetching latest ETH/USDT 4h data
+2025-06-24 19:21:37,640 - INFO - Fetched 500 data points. Latest: 2025-06-24 12:00:00
+2025-06-24 19:21:37,641 - INFO - Adding technical features
+2025-06-24 19:21:38,086 - INFO - Signal: 0, Probability: 46.07%, Price: 2428.83
+2025-06-24 19:21:38,086 - INFO - Capital: $10000.00, Unrealized PnL: $0.00, Total Equity: $10000.00
+2025-06-24 19:26:38,095 - INFO - Fetching latest ETH/USDT 4h data
+2025-06-24 19:26:38,366 - INFO - Fetched 500 data points. Latest: 2025-06-24 12:00:00
+2025-06-24 19:26:38,368 - INFO - Adding technical features
+2025-06-24 19:26:39,017 - INFO - Signal: 0, Probability: 46.07%, Price: 2436.39
+2025-06-24 19:26:39,019 - INFO - Capital: $10000.00, Unrealized PnL: $0.00, Total Equity: $10000.00
+2025-06-24 19:31:39,037 - INFO - Fetching latest ETH/USDT 4h data
+2025-06-24 19:31:39,300 - INFO - Fetched 500 data points. Latest: 2025-06-24 12:00:00
+2025-06-24 19:31:39,300 - INFO - Adding technical features
+2025-06-24 19:31:39,776 - INFO - Signal: 0, Probability: 46.07%, Price: 2435.09
+2025-06-24 19:31:39,776 - INFO - Capital: $10000.00, Unrealized PnL: $0.00, Total Equity: $10000.00
+2025-06-24 19:34:57,152 - INFO - Simulation stopped by user

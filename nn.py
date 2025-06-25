@@ -1,227 +1,384 @@
-# ✅ Enhanced Smart Money Crypto Predictor with High Accuracy Improvements
-# This version applies all optimization steps:
-# - Trend/volatility filters
-# - Expanded indicators
-# - Confidence-based labels
-# - Class-weighted BCE loss
-# - More training samples
-
-import time, datetime, numpy as np, pandas as pd, os
-import requests, torch, torch.nn as nn, torch.optim as optim
-from sklearn.preprocessing import RobustScaler
-from sklearn.metrics import roc_auc_score
-from hmmlearn.hmm import GaussianHMM
+import requests
+import pandas as pd
 import pandas_ta as ta
+import numpy as np
 import joblib
+import time
+import logging
+from datetime import datetime
+import warnings
+warnings.filterwarnings('ignore')
 
-SYMBOL = "BTCUSDT"
-INTERVAL = "4h"
-SEQ_LEN, PRED_LEN = 30, 1  # Longer sequence
-HIDDEN_STATES, EPOCHS, BATCH_SIZE = 4, 100, 32
-LR = 1e-4
-FETCH_LIMIT = 3000  # More data
-THRESHOLD = 0.01  # Higher filter
-CONFIDENCE_THRESHOLD = 0.55
+# Setup logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('trading_simulation_log.txt'),
+        logging.StreamHandler()
+    ]
+)
+logger = logging.getLogger(__name__)
 
-class SimpleLSTMClassifier(nn.Module):
-    def __init__(self, input_size, hidden=128):
-        super().__init__()
-        self.lstm = nn.LSTM(input_size, hidden, batch_first=True)
-        self.norm = nn.LayerNorm(hidden)
-        self.fc = nn.Sequential(
-            nn.Linear(hidden, 64), nn.ReLU(),
-            nn.Linear(64, 32), nn.ReLU(),
-            nn.Linear(32, 1)
+class TradingSimulator:
+    def __init__(self, symbol="ETH/USDT", timeframe="4h", lookback_periods=5):
+        self.symbol = symbol.upper().replace("/", "")
+        self.timeframe = timeframe
+        self.lookback_periods = lookback_periods
+        
+        
+        # Trading simulation variables
+        self.initial_capital = 10000
+        self.current_capital = self.initial_capital
+        self.current_position = None
+        self.position_size = 0
+        self.entry_price = 0
+        self.margin_used = 0
+        self.total_trades = 0
+        self.winning_trades = 0
+        self.total_pnl = 0
+        self.max_drawdown = 0
+        self.peak_capital = self.initial_capital
+        
+        # Load model if available
+        try:
+            self.model = joblib.load("trainesd_model.pkl")
+            self.scaler = joblib.load('scaler.pkl')
+            self.feature_cols = joblib.load('feature_cols.pkl')
+            logger.info("Loaded saved model, scaler, and feature columns")
+            self.use_model = True
+        except FileNotFoundError:
+            logger.warning("Model files not found. Using simple strategy instead.")
+            self.use_model = False
+
+    def fetch_latest_ohlcv(self, limit=500):
+        """Fetch latest OHLCV data using Binance API with requests."""
+        logger.info(f"Fetching latest {self.symbol} {self.timeframe} data via REST")
+        base_url = "https://api.binance.com/api/v3/klines"
+        params = {
+            "symbol": self.symbol,
+            "interval": "4h",
+            "limit": limit
+        }
+
+        try:
+            response = requests.get(base_url, params=params, timeout=10)
+            response.raise_for_status()
+            raw_data = response.json()
+
+            # Columns: open time, open, high, low, close, volume, close time, quote asset volume, num trades...
+            df = pd.DataFrame(raw_data, columns=[
+                'timestamp', 'open', 'high', 'low', 'close', 'volume',
+                'close_time', 'quote_volume', 'num_trades', 'taker_base_volume',
+                'taker_quote_volume', 'ignore'
+            ])
+
+            df = df[['timestamp', 'open', 'high', 'low', 'close', 'volume']]
+            df['timestamp'] = pd.to_datetime(df['timestamp'], unit='ms')
+            df[['open', 'high', 'low', 'close', 'volume']] = df[['open', 'high', 'low', 'close', 'volume']].astype(float)
+
+            logger.info(f"Fetched {len(df)} data points. Latest: {df['timestamp'].iloc[-1]}")
+            return df
+
+        except Exception as e:
+            logger.error(f"Error fetching OHLCV data: {e}")
+            return None
+
+    def add_technical_features(self, df):
+        """Add same technical indicators as in training"""
+        logger.info("Adding technical features")
+        
+        # Same technical indicators as in original code
+        macd = ta.macd(df['close'])
+        df['macd_hist'] = macd['MACDh_12_26_9']
+        df['macd_line'] = macd['MACD_12_26_9']
+        df['macd_signal'] = macd['MACDs_12_26_9']
+        
+        adx = ta.adx(df['high'], df['low'], df['close'], length=14)
+        df['adx'] = adx['ADX_14']
+        df['plus_di'] = adx['DMP_14']
+        df['minus_di'] = adx['DMN_14']
+        
+        st = ta.supertrend(df['high'], df['low'], df['close'])
+        df['supertrend'] = st['SUPERT_7_3.0']
+        df['supertrend_dir'] = st['SUPERTd_7_3.0']
+        
+        df['ema9'] = ta.ema(df['close'], length=9)
+        df['ema21'] = ta.ema(df['close'], length=21)
+        df['ema50'] = ta.ema(df['close'], length=50)
+        df['ema200'] = ta.ema(df['close'], length=200)
+        
+        df['ema9_above_21'] = df['ema9'] > df['ema21']
+        df['ema21_above_50'] = df['ema21'] > df['ema50']
+        df['above_ema200'] = df['close'] > df['ema200']
+        
+        df['roc'] = ta.roc(df['close'], length=10)
+        df['roc_5'] = ta.roc(df['close'], length=5)
+        
+        df['rsi'] = ta.rsi(df['close'], length=14)
+        df['rsi_ma'] = ta.sma(df['rsi'], length=5)
+        stochrsi = ta.stochrsi(df['close'], length=14)
+        df['stochrsi_k'] = stochrsi['STOCHRSIk_14_14_3_3']
+        df['stochrsi_d'] = stochrsi['STOCHRSId_14_14_3_3']
+        
+        bbands = ta.bbands(df['close'], length=20)
+        df['bb_upper'] = bbands['BBU_20_2.0']
+        df['bb_lower'] = bbands['BBL_20_2.0']
+        df['bb_width'] = (bbands['BBU_20_2.0'] - bbands['BBL_20_2.0']) / df['close']
+        df['bb_position'] = (df['close'] - bbands['BBL_20_2.0']) / (bbands['BBU_20_2.0'] - bbands['BBL_20_2.0'])
+        
+        df['atr'] = ta.atr(df['high'], df['low'], df['close'], length=14)
+        df['atr_ma'] = ta.sma(df['atr'], length=5)
+        df['volatility'] = df['close'].pct_change().rolling(20).std()
+        
+        df['volume_sma'] = ta.sma(df['volume'], length=20)
+        df['volume_ratio'] = df['volume'] / df['volume_sma']
+        
+        df['momentum'] = ta.mom(df['close'], length=10)
+        df['williams_r'] = ta.willr(df['high'], df['low'], df['close'], length=14)
+        
+        df['atr_percentile'] = df['atr'].rolling(100).apply(
+            lambda x: (x.rank(pct=True).iloc[-1]) if len(x.dropna()) > 0 else np.nan
         )
-    def forward(self, x):
-        out, _ = self.lstm(x)
-        out = self.norm(out[:, -1])
-        return self.fc(out)
+        
+        df['trend_strength'] = abs(df['adx']) * np.where(df['plus_di'] > df['minus_di'], 1, -1)
+        df['high_volatility'] = (df['atr_percentile'] > 0.7).astype(int)
+        df['low_volatility'] = (df['atr_percentile'] < 0.3).astype(int)
+        df['higher_highs'] = (df['high'] > df['high'].shift(1)).rolling(3).sum()
+        df['lower_lows'] = (df['low'] < df['low'].shift(1)).rolling(3).sum()
+        df['hour'] = df['timestamp'].dt.hour
+        df['day_of_week'] = df['timestamp'].dt.dayofweek
+        df['is_weekend'] = (df['day_of_week'] >= 5).astype(int)
+        
+        # Add lagged features
+        for lag in range(1, self.lookback_periods + 1):
+            for col in ['close', 'volume', 'rsi', 'macd_hist']:
+                if col in df.columns:
+                    df[f'{col}_lag_{lag}'] = df[col].shift(lag)
+        
+        return df
 
-def compute_indicators(df):
-    # === Trend Indicators ===
-    df["ema8"] = ta.ema(df["close"], length=8)
-    df["ema21"] = ta.ema(df["close"], length=21)
-    df["ema50"] = ta.ema(df["close"], length=50)
-    df["ema200"] = ta.ema(df["close"], length=200)
-    df["ema_trend"] = ((df["close"] > df["ema8"]).astype(int) + (df["ema8"] > df["ema21"]).astype(int) + (df["ema21"] > df["ema50"]).astype(int)) / 3
-
-    # === Volatility and Momentum ===
-    df["rsi14"] = ta.rsi(df["close"], length=14)
-    df["atr"] = ta.atr(df["high"], df["low"], df["close"], length=14)
-    df["atr_pct"] = df["atr"] / df["close"]
-
-    # === Volume Features ===
-    df["volume_sma"] = df["volume"].rolling(20).mean()
-    df["vol_ratio"] = df["volume"] / df["volume_sma"]
-
-    # === VWAP ===
-    df["vwap"] = ta.vwap(df["high"], df["low"], df["close"], df["volume"])
-    df["vwap_dist"] = (df["close"] - df["vwap"]) / df["vwap"]
-
-    # === MACD ===
-    macd = ta.macd(df["close"])
-    df["macd_line"] = macd["MACD_12_26_9"]
-    df["macd_signal"] = macd["MACDs_12_26_9"]
-    df["macd_hist"] = macd["MACDh_12_26_9"]
-
-    # === ADX ===
-    adx = ta.adx(df["high"], df["low"], df["close"], length=14)
-    df["adx"] = adx["ADX_14"]
-    df["dmp"] = adx["DMP_14"]
-    df["dmn"] = adx["DMN_14"]
-    df["dmi_diff"] = df["dmp"] - df["dmn"]
-
-    # === Bollinger Bands ===
-    bb = ta.bbands(df["close"], length=20, std=2)
-    df["bb_upper"] = bb["BBU_20_2.0"]
-    df["bb_lower"] = bb["BBL_20_2.0"]
-    df["bb_width"] = (df["bb_upper"] - df["bb_lower"]) / df["close"]
-    df["bb_position"] = (df["close"] - df["bb_lower"]) / (df["bb_upper"] - df["bb_lower"])
-
-    # === Stochastic RSI ===
-    stoch = ta.stochrsi(df["close"], length=14)
-    df["stoch_k"] = stoch["STOCHRSIk_14_14_3_3"]
-    df["stoch_d"] = stoch["STOCHRSId_14_14_3_3"]
-
-    df["ema50_dist"] = (df["close"] - df["ema50"]) / df["close"]
-    return df.dropna()
-
-def compute_hmm(df):
-    features = df[["close", "rsi14", "atr", "vol_ratio", "ema50_dist"]].dropna().values
-    scaler = RobustScaler()
-    scaled = scaler.fit_transform(features)
-    hmm = GaussianHMM(n_components=HIDDEN_STATES, covariance_type="full", n_iter=200)
-    hmm.fit(scaled)
-    states = hmm.predict(scaled)
-    return states
-
-def create_dataset(df, states):
-    df = df.copy()
-    df["state"] = states
-    feats = df[[
-        "close", "rsi14", "atr", "atr_pct", "vol_ratio", "vwap_dist",
-        "ema_trend", "macd_line", "macd_signal", "macd_hist",
-        "adx", "dmi_diff", "bb_width", "bb_position",
-        "stoch_k", "stoch_d", "state"
-    ]].values
-    X, y = [], []
-    for i in range(len(feats) - SEQ_LEN - PRED_LEN):
-        cur, fut = feats[i+SEQ_LEN-1][0], feats[i+SEQ_LEN+PRED_LEN-1][0]
-        change = (fut - cur) / cur
-        atr = feats[i+SEQ_LEN-1][2]
-        vol = feats[i+SEQ_LEN-1][3]
-        adx_val = feats[i+SEQ_LEN-1][6]
-
-        if abs(change) < THRESHOLD: continue
-        if atr < 0.005: continue
+    def make_prediction(self, df):
+        """Make trading prediction using the loaded model or simple strategy"""
+        if self.use_model:
+            try:
+                latest_data = df[self.feature_cols].iloc[-1:].dropna()
+                if latest_data.empty:
+                    logger.warning("No valid data for prediction")
+                    return None, None
+                
+                X_scaled = self.scaler.transform(latest_data)
+                prediction = self.model.predict(X_scaled)[0]
+                probability = self.model.predict_proba(X_scaled)[0, 1]
+                return prediction, probability
+            except Exception as e:
+                logger.error(f"Error making prediction: {e}")
+                return None, None
        
-        if adx_val < 20: continue
+         
 
-        X.append(feats[i:i+SEQ_LEN])
-        y.append(1 if change > 0 else 0)
+    def simulate_order(self, side, quantity, price):
+        """Simulate placing an order"""
+        try:
+            order = {
+                'id': f'sim_{int(time.time())}',
+                'symbol': self.symbol,
+                'side': side,
+                'amount': abs(quantity),
+                'price': price,
+                'timestamp': datetime.now(),
+                'status': 'filled'
+            }
+            logger.info(f"Simulated order: {side} {abs(quantity):.4f} {self.symbol} at {price:.2f}")
+            return order
+        except Exception as e:
+            logger.error(f"Error simulating order: {e}")
+            return None
 
-    X, y = np.array(X), np.array(y)
-    print(f"Label balance: {np.bincount(y.astype(int))}")
+    def calculate_position_size(self, capital, leverage, risk_per_trade=0.02):
+        """Calculate position size based on risk management"""
+        risk_amount = capital * risk_per_trade
+        margin_to_use = min(capital * 0.1, risk_amount * leverage)
+        return margin_to_use
 
-    from sklearn.utils import resample
-    pos = resample(X[y==1], n_samples=min(np.bincount(y.astype(int))), replace=False)
-    neg = resample(X[y==0], n_samples=min(np.bincount(y.astype(int))), replace=False)
-    X = np.concatenate([pos, neg])
-    y = np.array([1]*len(pos) + [0]*len(neg))
-    shuff = np.random.permutation(len(X))
-    return X[shuff], y[shuff]
+    def update_statistics(self, pnl):
+        """Update trading statistics"""
+        self.total_trades += 1
+        self.total_pnl += pnl
+        
+        if pnl > 0:
+            self.winning_trades += 1
+        
+        # Update peak capital and drawdown
+        if self.current_capital > self.peak_capital:
+            self.peak_capital = self.current_capital
+        
+        current_drawdown = (self.peak_capital - self.current_capital) / self.peak_capital
+        if current_drawdown > self.max_drawdown:
+            self.max_drawdown = current_drawdown
 
-def fetch_history(symbol="BTCUSDT", interval="4h", limit=2000):
-    url, all_data = "https://api.binance.com/api/v3/klines", []
-    end_time = int(time.time() * 1000)
-    while len(all_data) < limit:
-        fetch_count = min(1000, limit - len(all_data))
-        params = {"symbol": symbol.upper(), "interval": interval, "limit": fetch_count, "endTime": end_time}
-        r = requests.get(url, params=params)
-        data = r.json()
-        if not data: break
-        all_data = data + all_data
-        end_time = data[0][0] - 1
-        time.sleep(0.5)  # Slower for 4h data
-    
-    df = pd.DataFrame(all_data, columns=["open_time", "o", "h", "l", "c", "v", "close_time", "qav", "n", "tbv", "tqv", "i"])
-    df = df.astype({"o": float, "h": float, "l": float, "c": float, "v": float})
-    df["timestamp"] = pd.to_datetime(df["open_time"], unit="ms")
-    df.set_index("timestamp", inplace=True)
-    df = df[["o", "h", "l", "c", "v"]]
-    df.columns = ["open", "high", "low", "close", "volume"]
-    return df
+    def print_statistics(self):
+        """Print current trading statistics"""
+        win_rate = (self.winning_trades / self.total_trades * 100) if self.total_trades > 0 else 0
+        total_return = ((self.current_capital - self.initial_capital) / self.initial_capital) * 100
+        
+        print("\n" + "="*50)
+        print("📊 TRADING STATISTICS")
+        print("="*50)
+        print(f"Initial Capital: ${self.initial_capital:,.2f}")
+        print(f"Current Capital: ${self.current_capital:,.2f}")
+        print(f"Total Return: {total_return:+.2f}%")
+        print(f"Total PnL: ${self.total_pnl:+,.2f}")
+        print(f"Total Trades: {self.total_trades}")
+        print(f"Winning Trades: {self.winning_trades}")
+        print(f"Win Rate: {win_rate:.1f}%")
+        print(f"Max Drawdown: {self.max_drawdown:.1%}")
+        print("="*50)
 
-def main():
-    df = fetch_history(SYMBOL, INTERVAL, FETCH_LIMIT)
-    df = compute_indicators(df)
-    states = compute_hmm(df)
-    X, y = create_dataset(df, states)
-    X_scaled = RobustScaler().fit_transform(X.reshape(-1, X.shape[-1])).reshape(X.shape)
+    def run_simulation(self, leverage=3, commission_rate=0.0005, polling_interval=300):
+        """Run trading simulation with auto-flip support"""
+        print("🎮 Starting Trading Simulation")
+        print(f"Symbol: {self.symbol}")
+        print(f"Timeframe: {self.timeframe}")
+        print(f"Initial Capital: ${self.current_capital:,.2f}")
+        print(f"Leverage: {leverage}x")
+        print("-" * 50)
 
-    split = int(len(X) * 0.8)
-    trainX = torch.tensor(X_scaled[:split]).float()
-    trainY = torch.tensor(y[:split]).float().unsqueeze(1)
-    testX = torch.tensor(X_scaled[split:]).float()
-    testY = torch.tensor(y[split:]).float().unsqueeze(1)
+        logger.info("Starting trading simulation")
 
-    model = SimpleLSTMClassifier(trainX.shape[-1])
-    pos_weight = torch.tensor([len(trainY) / trainY.sum() - 1])
-    loss_fn = nn.BCEWithLogitsLoss(pos_weight=pos_weight)
-    opt = optim.AdamW(model.parameters(), lr=LR)
+        try:
+            while True:
+                df = self.fetch_latest_ohlcv()
+                if df is None:
+                    time.sleep(polling_interval)
+                    continue
 
-    best_loss, patience = float('inf'), 0
-    for epoch in range(EPOCHS):
-        model.train()
-        idx = torch.randperm(len(trainX))
-        for i in range(0, len(trainX), BATCH_SIZE):
-            b = idx[i:i+BATCH_SIZE]
-            pred = model(trainX[b])
-            loss = loss_fn(pred, trainY[b])
-            opt.zero_grad(); loss.backward(); opt.step()
-        model.eval()
-        with torch.no_grad():
-            val_pred = model(testX)
-            val_loss = loss_fn(val_pred, testY)
-            val_acc = ((torch.sigmoid(val_pred) > 0.5) == testY).float().mean()
-            val_auc = roc_auc_score(testY.cpu(), torch.sigmoid(val_pred).cpu())
-        print(f"Epoch {epoch+1} | Loss: {val_loss:.4f} | Acc: {val_acc:.3f} | AUC: {val_auc:.3f}")
-        if val_loss < best_loss:
-            best_loss = val_loss; patience = 0
-            torch.save(model.state_dict(), "model.pt")
-        else:
-            patience += 1
-        if patience > 15:
-            print("Early stopping"); break
+                df = self.add_technical_features(df)
+                prediction, probability = self.make_prediction(df)
 
-    model.load_state_dict(torch.load("model.pt"))
-    model.eval()
+                if prediction is None:
+                    logger.warning("Skipping trading cycle due to prediction error")
+                    time.sleep(polling_interval)
+                    continue
 
-    val_df = df.iloc[-len(testX):]
-    prev_price = None
-    wins, total, profit = 0, 0, 0
+                current_price = df['close'].iloc[-1]
+                confidence_threshold = 0.55
 
-    for i in range(len(testX)):
-        prob = torch.sigmoid(model(testX[i].unsqueeze(0))).item()
-        if 1 - CONFIDENCE_THRESHOLD < prob < CONFIDENCE_THRESHOLD:
-            continue
-        direction = 1 if prob > 0.5 else 0
-        cur_price = val_df["close"].iloc[i]
-        if prev_price is not None:
-            actual = 1 if cur_price > prev_price else 0
-            correct = (actual == direction)
-            pct = abs(cur_price - prev_price) / prev_price
-            profit += pct * (1 if correct else -1) * 100
-            wins += int(correct)
-            total += 1
-            print(f"[{val_df.index[i]}] {'✅' if correct else '❌'} Pred: {['DOWN','UP'][direction]} | Price: {prev_price:.2f} → {cur_price:.2f} | Profit: {profit:.2f}%")
-        prev_price = cur_price
+                signal = 0
+                if prediction == 1 and probability > confidence_threshold:
+                    signal = 1
+                elif prediction == 0 and probability < (1 - confidence_threshold):
+                    signal = -1
 
-    if total > 0:
-        print("\n📈 FINAL RESULTS")
-        print(f"Success Rate: {wins}/{total} = {wins/total:.2%}")
-        print(f"Net PnL: {profit:.2f}% | Avg/trade: {profit/total:.3f}%")
+                logger.info(f"Signal: {signal}, Probability: {probability:.2%}, Price: {current_price:.2f}")
+
+                # Auto-flip logic
+                if self.current_position is not None and (
+                    signal == 0 or
+                    (signal == 1 and self.current_position == 'short') or
+                    (signal == -1 and self.current_position == 'long')
+                ):
+                    # Close current position
+                    side = 'sell' if self.current_position == 'long' else 'buy'
+                    order = self.simulate_order(side, abs(self.position_size), current_price)
+
+                    if order:
+                        realized_pnl = self.position_size * (current_price - self.entry_price)
+                        commission = abs(self.position_size * current_price) * commission_rate
+                        self.current_capital += (realized_pnl - commission)
+                        self.update_statistics(realized_pnl)
+
+                        logger.info(f"Closed {self.current_position} position: "
+                                    f"PnL=${realized_pnl:.2f}, Commission=${commission:.2f}")
+
+                        self.current_position = None
+                        self.position_size = 0
+                        self.entry_price = 0
+                        self.margin_used = 0
+
+                        # Auto-flip: Open new position immediately
+                        if signal in [1, -1] and self.current_capital > 1000:
+                            margin_to_use = self.calculate_position_size(self.current_capital, leverage)
+                            position_value = margin_to_use * leverage
+                            self.position_size = position_value / current_price * (1 if signal == 1 else -1)
+
+                            side = 'buy' if signal == 1 else 'sell'
+                            order = self.simulate_order(side, abs(self.position_size), current_price)
+
+                            if order:
+                                self.current_position = 'long' if signal == 1 else 'short'
+                                self.entry_price = current_price
+                                commission = position_value * commission_rate
+                                self.margin_used = margin_to_use
+                                self.current_capital -= commission
+
+                                logger.info(f"Auto-flipped to {self.current_position} position: "
+                                            f"Size={self.position_size:.4f}, Entry=${self.entry_price:.2f}, "
+                                            f"Margin=${margin_to_use:.2f}")
+
+                elif signal != 0 and self.current_position is None and self.current_capital > 1000:
+                    # Open new position
+                    margin_to_use = self.calculate_position_size(self.current_capital, leverage)
+                    position_value = margin_to_use * leverage
+                    self.position_size = position_value / current_price * (1 if signal == 1 else -1)
+
+                    side = 'buy' if signal == 1 else 'sell'
+                    order = self.simulate_order(side, abs(self.position_size), current_price)
+
+                    if order:
+                        self.current_position = 'long' if signal == 1 else 'short'
+                        self.entry_price = current_price
+                        commission = position_value * commission_rate
+                        self.margin_used = margin_to_use
+                        self.current_capital -= commission
+
+                        logger.info(f"Opened {self.current_position} position: "
+                                    f"Size={self.position_size:.4f}, Entry=${self.entry_price:.2f}, "
+                                    f"Margin=${margin_to_use:.2f}")
+
+                # Unrealized PnL and logging
+                unrealized_pnl = 0
+                if self.current_position:
+                    unrealized_pnl = self.position_size * (current_price - self.entry_price)
+
+                total_equity = self.current_capital + unrealized_pnl
+                logger.info(f"Capital: ${self.current_capital:.2f}, Unrealized PnL: ${unrealized_pnl:.2f}, "
+                            f"Total Equity: ${total_equity:.2f}")
+
+                if self.total_trades % 10 == 0 or self.current_position is None:
+                    self.print_statistics()
+
+                print(f"⏳ Waiting {polling_interval//60} minutes for next update...")
+                time.sleep(polling_interval)
+
+        except KeyboardInterrupt:
+            print("\n🛑 Simulation stopped by user")
+            logger.info("Simulation stopped by user")
+
+            if self.current_position:
+                logger.info("Closing open position...")
+                current_price = df['close'].iloc[-1] if df is not None else self.entry_price
+                realized_pnl = self.position_size * (current_price - self.entry_price)
+                self.current_capital += realized_pnl
+                self.update_statistics(realized_pnl)
+
+            self.print_statistics()
+
+        except Exception as e:
+            logger.error(f"Error in simulation loop: {e}")
+            self.print_statistics()
+
 
 if __name__ == "__main__":
-    main()
+    # Create and run simulation
+    simulator = TradingSimulator(
+        symbol="ETH/USDT",
+        timeframe="4h",
+        lookback_periods=3
+    )
+    
+    simulator.run_simulation(
+        leverage=3,
+        commission_rate=0.0005,
+        polling_interval=300  # 5 minutes for testing, use 14400 for 4h candles
+    )

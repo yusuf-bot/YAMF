@@ -30,7 +30,7 @@ def add_indicators(df):
     df.ta.adx(length=14, append=True)
     df.ta.bbands(length=20, append=True)
     vwap=df.ta.vwap(append=False)
-    df['VWAP'] = vwap.iloc[:, 0]
+    df['VWAP'] = vwap if isinstance(vwap, pd.Series) else vwap.iloc[:, 0]
 
     df['ema_trend'] = (df['EMA_50'] > df['EMA_200']).astype(int)
     df['price_slope'] = df['close'].diff(4)
