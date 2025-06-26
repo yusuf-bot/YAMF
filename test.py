@@ -1,21 +1,14 @@
-import ccxt
-import pandas as pd
-from dotenv import load_dotenv
+from alpaca.trading.client import TradingClient
 import os
-
-# Load environment variables
+from dotenv import load_dotenv
 load_dotenv()
+# Load Alpaca API credentials from environment variables
+API_KEY = os.getenv("ALPACA_API_KEY")
+API_SECRET = os.getenv("ALPACA_SECRET_KEY")
 
-API_KEY = os.environ['BYBIT_API_KEY']
-API_SECRET = os.environ['BYBIT_SECRET_KEY']
-
-# Initialize Bybit exchange in testnet mode
-bybit = ccxt.bybit({
-    'apiKey': API_KEY,
-    'secret': API_SECRET,
-    'enableRateLimit': True,
-    'testnet': True  # Enable testnet mode
-})
-
-# Verify connection
-print(bybit.fetch_balance())  # Check testnet funds
+trading_client = TradingClient(API_KEY, API_SECRET, paper=True)
+try:
+    account = trading_client.get_account()
+    print(account)
+except Exception as e:
+    print(f"Error: {e}")
